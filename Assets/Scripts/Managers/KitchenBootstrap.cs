@@ -133,8 +133,22 @@ public class KitchenBootstrap : MonoBehaviour
             wallCabinet.GetComponent<Renderer>().material.color = new Color(0.9f, 0.9f, 0.9f);
         }
 
-        // 7. Elementos Interiores Funcionales
-        CreateBar("Barra_Cocina", new Vector3(0, 1.5f, -5), new Vector3(60, 3, 1), container.transform);
+        // 7. MOSTRADOR DE PEDIDOS (Situado al lado de la barra)
+        GameObject orderCounter = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        orderCounter.name = "Mostrador_Pedidos"; orderCounter.transform.SetParent(container.transform);
+        orderCounter.transform.position = new Vector3(-15, 1.5f, -5);
+        orderCounter.transform.localScale = new Vector3(10, 3, 2);
+        orderCounter.GetComponent<Renderer>().material.color = new Color(0.5f, 0.3f, 0.2f);
+        
+        // Tapa del mostrador
+        GameObject counterTopMostrador = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        counterTopMostrador.transform.SetParent(orderCounter.transform);
+        counterTopMostrador.transform.localPosition = new Vector3(0, 0.55f, 0);
+        counterTopMostrador.transform.localScale = new Vector3(1.1f, 0.1f, 1.1f);
+        counterTopMostrador.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.1f);
+
+        // 8. Elementos Interiores Funcionales
+        CreateBar("Barra_Cocina", new Vector3(10, 1.5f, -5), new Vector3(40, 3, 1), container.transform);
 
         GameObject player = CreatePerson("Cocinero", new Vector3(8, 1.1f, 15), Color.white, container.transform);
         player.AddComponent<PlayerController>();
@@ -161,7 +175,7 @@ public class KitchenBootstrap : MonoBehaviour
             }
         }
 
-        Debug.Log("URGENTE: Restaurante con Baño Generado.");
+        Debug.Log("URGENTE: Restaurante con Mostrador Generado.");
     }
 
     private void CreateToilet(string n, Vector3 p, Transform par)
@@ -169,43 +183,29 @@ public class KitchenBootstrap : MonoBehaviour
         GameObject toilet = new GameObject(n);
         toilet.transform.SetParent(par);
         toilet.transform.position = p;
-        // Tanque
         GameObject tank = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        tank.transform.SetParent(toilet.transform);
-        tank.transform.localPosition = new Vector3(0, 0.5f, -0.4f);
-        tank.transform.localScale = new Vector3(0.8f, 1f, 0.4f);
-        tank.GetComponent<Renderer>().material.color = Color.white;
-        // Taza
+        tank.transform.SetParent(toilet.transform); tank.transform.localPosition = new Vector3(0, 0.5f, -0.4f);
+        tank.transform.localScale = new Vector3(0.8f, 1f, 0.4f); tank.GetComponent<Renderer>().material.color = Color.white;
         GameObject bowl = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        bowl.transform.SetParent(toilet.transform);
-        bowl.transform.localPosition = new Vector3(0, 0f, 0.2f);
-        bowl.transform.localScale = new Vector3(0.7f, 0.4f, 0.7f);
-        bowl.GetComponent<Renderer>().material.color = Color.white;
+        bowl.transform.SetParent(toilet.transform); bowl.transform.localPosition = new Vector3(0, 0f, 0.2f);
+        bowl.transform.localScale = new Vector3(0.7f, 0.4f, 0.7f); bowl.GetComponent<Renderer>().material.color = Color.white;
     }
 
     private void CreateSink(string n, Vector3 p, Transform par)
     {
         GameObject sink = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        sink.name = n;
-        sink.transform.SetParent(par);
-        sink.transform.position = p;
-        sink.transform.localScale = new Vector3(1.2f, 0.2f, 1f);
-        sink.GetComponent<Renderer>().material.color = Color.white;
+        sink.name = n; sink.transform.SetParent(par); sink.transform.position = p;
+        sink.transform.localScale = new Vector3(1.2f, 0.2f, 1f); sink.GetComponent<Renderer>().material.color = Color.white;
         GameObject leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        leg.transform.SetParent(sink.transform);
-        leg.transform.localPosition = new Vector3(0, -4.5f, 0);
-        leg.transform.localScale = new Vector3(0.2f, 4.5f, 0.2f);
-        leg.GetComponent<Renderer>().material.color = Color.gray;
+        leg.transform.SetParent(sink.transform); leg.transform.localPosition = new Vector3(0, -4.5f, 0);
+        leg.transform.localScale = new Vector3(0.2f, 4.5f, 0.2f); leg.GetComponent<Renderer>().material.color = Color.gray;
     }
 
     private void CreateBucket(string n, Vector3 p, Transform par)
     {
         GameObject bucket = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        bucket.name = n;
-        bucket.transform.SetParent(par);
-        bucket.transform.position = p;
-        bucket.transform.localScale = new Vector3(0.6f, 0.4f, 0.6f);
-        bucket.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.5f);
+        bucket.name = n; bucket.transform.SetParent(par); bucket.transform.position = p;
+        bucket.transform.localScale = new Vector3(0.6f, 0.4f, 0.6f); bucket.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.5f);
     }
 
     private void CreateTableWithChairs(string nameBase, Vector3 pos, Transform par)
