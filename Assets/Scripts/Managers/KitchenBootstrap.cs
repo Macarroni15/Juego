@@ -51,8 +51,11 @@ public class KitchenBootstrap : MonoBehaviour
         l.type = LightType.Directional;
         lightObj.transform.rotation = Quaternion.Euler(50, -30, 0);
 
-        // 2. SUELO UNIFORME Y ELEGANTE (Toda la superficie interior)
-        CreateTiledFloor("Suelo_Principal", new Vector3(0, 0.01f, 0), new Vector3(64, 1, 105), new Color(0.95f, 0.95f, 0.95f), container.transform);
+        // 2. SUELO ORIGINAL (Limpio y uniforme)
+        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        floor.name = "Suelo_Principal"; floor.transform.SetParent(container.transform);
+        floor.transform.localScale = new Vector3(10, 1, 10.5f);
+        floor.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.12f);
 
         // (Alfombra eliminada para mantener uniformidad total)
 
@@ -126,12 +129,16 @@ public class KitchenBootstrap : MonoBehaviour
         }
 
 
-        // 4. BAÑO REAL Y BONITO (A la izquierda - TOTALMENTE CERRADO)
+        // 4. BAÑO REAL Y BONITO (Contenedor restaurado)
         GameObject bathroom = new GameObject("Area_Baño");
         bathroom.transform.SetParent(container.transform);
-        
-        // Suelo Baño (Mismo que el resto para uniformidad)
-        CreateTiledFloor("Suelo_Baño", new Vector3(-21, 0.051f, 40), new Vector3(22, 1, 30), new Color(0.95f, 0.95f, 0.95f), bathroom.transform);
+
+        // Suelo Baño (Uniforme con el resto)
+        GameObject bathFloor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        bathFloor.name = "Suelo_Baño"; bathFloor.transform.SetParent(bathroom.transform);
+        bathFloor.transform.position = new Vector3(-21, 0.02f, 40); 
+        bathFloor.transform.localScale = new Vector3(2.2f, 1, 3.0f); 
+        bathFloor.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.12f);
 
         // Muros Baño para CERRARLO (Ajuste al fondo z=54.5)
         CreateWall("Baño_Wall_DER", new Vector3(-10, 4, 39.75f), new Vector3(0.5f, 8, 29.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
@@ -155,12 +162,16 @@ public class KitchenBootstrap : MonoBehaviour
         CreateMirror("Espejo_Pared", new Vector3(-15, 6, 54.4f), bathroom.transform);
         CreateDetailedToilet("Bater_Real", new Vector3(-25, 0.1f, 53.5f), bathroom.transform);
 
-        // 5. COCINA PROFESIONAL (A la derecha al fondo)
+        // 5. COCINA PROFESIONAL (Contenedor restaurado)
         GameObject kitchen = new GameObject("Area_Cocina");
         kitchen.transform.SetParent(container.transform);
-        
-        // SUELO COCINA GASTRONÓMICO (Baldosas Blancas Pulidas)
-        CreateTiledFloor("Suelo_Cocina", new Vector3(16, 0.05f, 40), new Vector3(32, 1, 30), new Color(0.95f, 0.95f, 0.95f), kitchen.transform);
+
+        // SUELO COCINA (Uniforme con el resto)
+        GameObject kFloor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        kFloor.name = "Suelo_Cocina"; kFloor.transform.SetParent(kitchen.transform);
+        kFloor.transform.position = new Vector3(16, 0.02f, 38);
+        kFloor.transform.localScale = new Vector3(3.2f, 1, 3.2f);
+        kFloor.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.12f);
 
         // Muros Cocina (AJUSTE MATEMÁTICO - TERMINA EN 54.5)
         CreateWall("Cocina_Wall_IZQ", new Vector3(0, 4, 39.75f), new Vector3(1f, 8, 29.5f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
@@ -995,15 +1006,12 @@ public class KitchenBootstrap : MonoBehaviour
             rail.GetComponent<Renderer>().material.color = new Color(0.85f, 0.85f, 0.85f);
         }
 
-        // 2. VALLADO Y PUERTA (Zona Privada)
-        float fX = s.x/2 + 6; float fZ = s.z/2 + 6;
+        // 2. VALLADO PERIMETRAL (Cerca de la piscina como pediste)
+        float fX = s.x/2 + 4; float fZ = s.z/2 + 4;
         CreateFencePerimeter(area.transform, fX, fZ);
 
-        // 3. DUCHAS (Entrada)
-        CreateShower("Ducha_Doble", new Vector3(fX - 4, 0, fZ - 4), area.transform);
-
-        // 4. SOCORRISTA
-        CreateLifeguardStation(new Vector3(0, 0, fZ - 3), area.transform);
+        // 3. SOCORRISTA
+        CreateLifeguardStation(new Vector3(0, 0, fZ - 2), area.transform);
     }
 
     private void CreateFencePerimeter(Transform par, float dx, float dz)
