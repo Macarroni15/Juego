@@ -64,12 +64,18 @@ public class KitchenBootstrap : MonoBehaviour
         
         GameObject kitchenFloor = GameObject.CreatePrimitive(PrimitiveType.Plane);
         kitchenFloor.name = "Zona_Cocina_Suelo"; kitchenFloor.transform.SetParent(kitchenArea.transform);
-        kitchenFloor.transform.position = new Vector3(8, 0.01f, 25);
-        kitchenFloor.transform.localScale = new Vector3(2.5f, 1, 2.5f);
-        kitchenFloor.GetComponent<Renderer>().material.color = new Color(0.4f, 0.4f, 0.4f, 0.5f);
+        kitchenFloor.transform.position = new Vector3(8, 0.01f, 40);
+        kitchenFloor.transform.localScale = new Vector3(3f, 1, 3.5f);
+        kitchenFloor.GetComponent<Renderer>().material.color = new Color(0.25f, 0.25f, 0.25f);
+        
+        // PARED DE AZULEJOS (Backsplash) CORREGIDA
+        GameObject backsplash = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        backsplash.name = "Backsplash_Cocina"; backsplash.transform.SetParent(kitchenArea.transform);
+        backsplash.transform.position = new Vector3(12, 4, 54.4f); backsplash.transform.localScale = new Vector3(30, 8, 0.2f);
+        backsplash.GetComponent<Renderer>().material.color = new Color(0.9f, 0.95f, 1f);
 
-        // 4. PAREDES EXTERIORES
-        CreateWall("Restaurante_Pared_Fondo", new Vector3(0, 4, 48), new Vector3(64, 8, 1), container.transform);
+        // 4. PAREDES EXTERIORES (Ajustadas para no colisionar con muebles)
+        CreateWall("Restaurante_Pared_Fondo", new Vector3(0, 4, 55), new Vector3(64, 8, 1), container.transform);
         CreateWall("Restaurante_Pared_Izquierda", new Vector3(-32, 4, 2.5f), new Vector3(1, 8, 92), container.transform);
         CreateWall("Restaurante_Pared_Derecha", new Vector3(32, 4, 2.5f), new Vector3(1, 8, 92), container.transform);
         CreateWall("Restaurante_Pared_Frontal_L", new Vector3(-18, 4, -43), new Vector3(28, 8, 1), container.transform);
@@ -97,35 +103,59 @@ public class KitchenBootstrap : MonoBehaviour
         // 6. MOBILIARIO DE COCINA
         GameObject kitchenFurniture = new GameObject("Muebles_Cocina");
         kitchenFurniture.transform.SetParent(kitchenArea.transform);
+        // 6. NEVERA Y ARMARIOS BASE
         GameObject fridge = GameObject.CreatePrimitive(PrimitiveType.Cube);
         fridge.name = "Nevera"; fridge.transform.SetParent(kitchenFurniture.transform);
-        fridge.transform.position = new Vector3(20, 2.5f, 40); fridge.transform.localScale = new Vector3(3, 5, 3);
-        fridge.GetComponent<Renderer>().material.color = new Color(0.75f, 0.75f, 0.75f);
+        fridge.transform.position = new Vector3(22, 2.5f, 45); fridge.transform.localScale = new Vector3(3, 5, 3);
+        fridge.GetComponent<Renderer>().material.color = new Color(0.85f, 0.85f, 0.85f);
 
+        // Pared del fondo: Estaciones de trabajo premium (Movidas a la derecha para no chocar con el baño)
         for (int i = 0; i < 5; i++)
         {
-            GameObject cabinet = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cabinet.name = "Armario_Bajo_" + i; cabinet.transform.SetParent(kitchenFurniture.transform);
-            cabinet.transform.position = new Vector3(-5 + (i * 4), 1f, 45);
-            cabinet.transform.localScale = new Vector3(3.5f, 2, 3.5f);
-            cabinet.GetComponent<Renderer>().material.color = Color.white;
-            GameObject counterTop = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            counterTop.transform.SetParent(cabinet.transform);
-            counterTop.transform.localPosition = new Vector3(0, 0.55f, 0);
-            counterTop.transform.localScale = new Vector3(1.1f, 0.1f, 1.1f);
-            counterTop.GetComponent<Renderer>().material.color = Color.black;
+            float xPos = 0 + (i * 6); // Comienza en 0 en lugar de -12
+            if (i == 0) CreateAppliance("Fregadero_Industrial", new Vector3(xPos, 1f, 52), new Color(0.75f, 0.75f, 0.75f), "Sink", kitchenFurniture.transform);
+            else if (i == 1 || i == 3) CreateAppliance("Fogon_Pro_" + i, new Vector3(xPos, 1f, 52), new Color(0.2f, 0.2f, 0.2f), "Stove", kitchenFurniture.transform);
+            else {
+                GameObject cabinet = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cabinet.name = "Mueble_Inox_" + i; cabinet.transform.SetParent(kitchenFurniture.transform);
+                cabinet.transform.position = new Vector3(xPos, 1f, 52); cabinet.transform.localScale = new Vector3(5.5f, 2, 4f);
+                cabinet.GetComponent<Renderer>().material.color = new Color(0.7f, 0.7f, 0.7f);
+                GameObject top = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                top.transform.SetParent(cabinet.transform); top.transform.localPosition = new Vector3(0, 0.55f, 0);
+                top.transform.localScale = new Vector3(1.02f, 0.08f, 1.05f); top.GetComponent<Renderer>().material.color = new Color(0.15f, 0.15f, 0.15f);
+            }
         }
 
-        for (int i = 0; i < 4; i++)
+        // Armarios altos corregidos
+        for (int i = 0; i < 5; i++)
         {
             GameObject wallCabinet = GameObject.CreatePrimitive(PrimitiveType.Cube);
             wallCabinet.name = "Armario_Alto_" + i; wallCabinet.transform.SetParent(kitchenFurniture.transform);
-            wallCabinet.transform.position = new Vector3(-5 + (i * 5), 5.5f, 47);
-            wallCabinet.transform.localScale = new Vector3(4, 3, 1.5f);
-            wallCabinet.GetComponent<Renderer>().material.color = new Color(0.9f, 0.9f, 0.9f);
+            wallCabinet.transform.position = new Vector3(0 + (i * 6), 5.5f, 53.5f);
+            wallCabinet.transform.localScale = new Vector3(5.5f, 3, 1.5f);
+            wallCabinet.GetComponent<Renderer>().material.color = new Color(0.95f, 0.95f, 0.95f);
         }
 
-        // 7. MOSTRADOR DE PEDIDOS
+        // 7. ISLA PROFESIONAL (Movida a la derecha)
+        GameObject island = new GameObject("IslaCocina_Premium");
+        island.transform.SetParent(kitchenFurniture.transform);
+        island.transform.position = new Vector3(12, 0, 35);
+        
+        // Base de la isla
+        GameObject baseIsland = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        baseIsland.transform.SetParent(island.transform);
+        baseIsland.transform.localPosition = new Vector3(0, 1f, 0);
+        baseIsland.transform.localScale = new Vector3(12f, 2f, 5f);
+        baseIsland.GetComponent<Renderer>().material.color = new Color(0.6f, 0.62f, 0.65f);
+
+        // Encimera superior de mármol/negro
+        GameObject islandTop = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        islandTop.transform.SetParent(baseIsland.transform);
+        islandTop.transform.localPosition = new Vector3(0, 0.55f, 0);
+        islandTop.transform.localScale = new Vector3(1.05f, 0.1f, 1.05f);
+        islandTop.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.1f);
+
+        // 8. MOSTRADOR DE PEDIDOS
         GameObject orderCounter = GameObject.CreatePrimitive(PrimitiveType.Cube);
         orderCounter.name = "Mostrador_Pedidos"; orderCounter.transform.SetParent(container.transform);
         orderCounter.transform.position = new Vector3(-15, 1.5f, -5);
@@ -137,47 +167,53 @@ public class KitchenBootstrap : MonoBehaviour
         counterTopMostrador.transform.localScale = new Vector3(1.1f, 0.1f, 1.1f);
         counterTopMostrador.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.1f);
 
-        // 8. LOS 3 COCINEROS (Controlables con Flechas)
-        Vector3[] chefPositions = { new Vector3(8, 1.1f, 15), new Vector3(4, 1.1f, 15), new Vector3(12, 1.1f, 15) };
-        for (int i = 0; i < chefPositions.Length; i++)
+        // 9. LOS 3 COCINEROS (Ajustados a las nuevas posiciones)
+        Vector3[] chefPos = { new Vector3(12, 0.1f, 30), new Vector3(12, 0.1f, 40), new Vector3(5, 0.1f, 40) };
+        for (int i = 0; i < 3; i++)
         {
-            GameObject chef = CreatePerson("Cocinero_" + i, chefPositions[i], Color.white, container.transform);
-            chef.AddComponent<PlayerController>();
-            
-            PlayerInput input = chef.AddComponent<PlayerInput>();
-            // Nota: Al añadir PlayerInput a los 3, todos se moverán a la vez con las flechas
-            
-            // Gorrito de chef
-            GameObject head = chef.transform.Find("Visuals/Head")?.gameObject;
+            string n = "Cocinero_" + i;
+            GameObject oldChef = GameObject.Find(n); if (oldChef != null) DestroyImmediate(oldChef);
+            GameObject chef = CreatePerson(n, chefPos[i], Color.white, null);
+            chef.AddComponent<PlayerController>(); chef.AddComponent<PlayerInput>();
+            Transform head = chef.transform.Find("Visuals/Head");
             if (head != null) {
-                GameObject hat = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                hat.name = "GorroChef"; hat.transform.SetParent(head.transform); 
-                hat.transform.localPosition = new Vector3(0, 0.4f, 0);
-                hat.transform.localScale = new Vector3(0.8f, 0.6f, 0.8f); 
-                hat.GetComponent<Renderer>().material.color = Color.white;
+                GameObject hat = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                hat.transform.SetParent(head); hat.transform.localPosition = new Vector3(0, 0.45f, 0);
+                hat.transform.localScale = new Vector3(0.7f, 0.5f, 0.7f);
             }
         }
 
-        // 9. PERSONA EN LA BARRA
-        GameObject barStaff = CreatePerson("Atendedor_Barra", new Vector3(10, 1.1f, -4), new Color(0.2f, 0.5f, 0.8f), container.transform);
-        barStaff.transform.rotation = Quaternion.Euler(0, 180, 0);
+        // 10. PERSONA EN LA BARRA (Fija)
+        GameObject barPerson = CreatePerson("StaffBarra", new Vector3(10, 0.1f, -4), new Color(0.2f, 0.5f, 0.8f), null);
+        barPerson.transform.rotation = Quaternion.Euler(0, 180, 0);
+        barPerson.transform.localScale = new Vector3(1.1f, 1.4f, 1.1f);
 
-        // 10. ELEMENTOS DE LA BARRA
+        // 11. ELEMENTOS BARRA
         CreateCashRegister("CajaRegistradora", new Vector3(5, 1.6f, -5), container.transform);
         CreateOrderScreen("PantallaPedidos", new Vector3(10, 1.6f, -5.2f), container.transform);
         CreateTPV("TPV_Pago", new Vector3(15, 1.6f, -5), container.transform);
-
-        // 11. Elementos Interiores Funcionales
         CreateBar("Barra_Cocina", new Vector3(10, 1.5f, -5), new Vector3(40, 3, 1), container.transform);
 
-        CreateStation("Tomate", new Vector3(-5, 1, 35), Color.red, typeof(DispenserStation), kitchenArea.transform, "Tomato");
-        CreateStation("Lechuga", new Vector3(-1, 1, 35), Color.green, typeof(DispenserStation), kitchenArea.transform, "Lettuce");
-        CreateStation("Pan", new Vector3(3, 1, 35), new Color(0.8f, 0.5f, 0.2f), typeof(DispenserStation), kitchenArea.transform, "Bread");
-        CreateStation("Pollo", new Vector3(7, 1, 35), new Color(1f, 0.8f, 0.6f), typeof(DispenserStation), kitchenArea.transform, "Chicken");
-        CreateStation("Tabla de Cortar", new Vector3(13, 1, 35), Color.gray, typeof(CuttingStation), kitchenArea.transform);
-        CreateStation("Basura", new Vector3(25, 1, 5), Color.black, typeof(TrashStation), kitchenArea.transform);
+        // 12. ESTACIONES ORGANIZADAS (Look Profesional)
+        float dispY = 2.1f;
+        float dispZ = 52.0f; 
+        
+        // Ingredientes en la pared del fondo (Centrados con los nuevos muebles)
+        CreateStation("Tomate", new Vector3(6, dispY, dispZ), Color.red, typeof(DispenserStation), kitchenArea.transform, "Tomato");
+        CreateStation("Lechuga", new Vector3(12, dispY, dispZ), Color.green, typeof(DispenserStation), kitchenArea.transform, "Lettuce");
+        CreateStation("Pan", new Vector3(18, dispY, dispZ), new Color(0.8f, 0.5f, 0.2f), typeof(DispenserStation), kitchenArea.transform, "Bread");
+        
+        // Estaciones en la Isla (Ajustadas a la nueva X de la isla)
+        CreateStation("Tabla de Cortar 1", new Vector3(10, dispY, 35), Color.gray, typeof(CuttingStation), kitchenArea.transform);
+        CreateStation("Tabla de Cortar 2", new Vector3(14, dispY, 35), Color.gray, typeof(CuttingStation), kitchenArea.transform);
+        
+        CreateStation("Pollo", new Vector3(15, dispY, 32.5f), new Color(1f, 0.8f, 0.6f), typeof(DispenserStation), kitchenArea.transform, "Chicken");
+        CreateStation("Brocoli", new Vector3(9, dispY, 32.5f), new Color(0, 0.4f, 0), typeof(DispenserStation), kitchenArea.transform, "Broccoli");
+
+        CreateStation("Basura", new Vector3(28, 1, 10), Color.black, typeof(TrashStation), kitchenArea.transform);
         CreateStation("Ventanilla Entrega", new Vector3(0, 1.5f, -5.5f), Color.blue, typeof(DeliveryStation), container.transform);
 
+        // 13. MESAS Y SILLAS
         int tablesCount = 0;
         for (int x = -2; x <= 2; x += 2)
         {
@@ -297,12 +333,14 @@ public class KitchenBootstrap : MonoBehaviour
     private GameObject CreatePerson(string n, Vector3 p, Color c, Transform par, bool isSitting = false)
     {
         GameObject person = new GameObject(n);
-        person.transform.SetParent(par);
+        if (par != null) person.transform.SetParent(par);
         person.transform.position = p;
 
         // Root logic
         if (!isSitting) {
-            person.AddComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            Rigidbody rb = person.AddComponent<Rigidbody>();
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
             CapsuleCollider col = person.AddComponent<CapsuleCollider>();
             col.height = 2f; col.radius = 0.4f; col.center = new Vector3(0, 0.9f, 0);
         }
@@ -312,35 +350,8 @@ public class KitchenBootstrap : MonoBehaviour
         visuals.transform.localPosition = Vector3.zero;
         if (!isSitting) visuals.AddComponent<CharacterAnimator>();
 
-        // Torso
-        GameObject torso = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        torso.name = "Torso"; torso.transform.SetParent(visuals.transform);
-        float torsoY = isSitting ? 0.7f : 1.1f;
-        torso.transform.localPosition = new Vector3(0, torsoY, 0);
-        torso.transform.localScale = new Vector3(0.6f, 0.8f, 0.3f);
-        torso.GetComponent<Renderer>().material.color = c;
-
-        // Cabeza
-        GameObject head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        head.name = "Head"; head.transform.SetParent(visuals.transform);
-        float headY = isSitting ? 1.3f : 1.7f;
-        head.transform.localPosition = new Vector3(0, headY, 0);
-        head.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
-        head.GetComponent<Renderer>().material.color = new Color(0.9f, 0.7f, 0.6f); // Skin tone
-
-        // Ojos
-        GameObject eyeL = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        eyeL.name = "EyeL"; eyeL.transform.SetParent(head.transform);
-        eyeL.transform.localPosition = new Vector3(-0.2f, 0.1f, 0.4f);
-        eyeL.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-        eyeL.GetComponent<Renderer>().material.color = Color.black;
-
-        GameObject eyeR = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        eyeR.name = "EyeR"; eyeR.transform.SetParent(head.transform);
-        eyeR.transform.localPosition = new Vector3(0.2f, 0.1f, 0.4f);
-        eyeR.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-        eyeR.GetComponent<Renderer>().material.color = Color.black;
-
+        // Posiciones relativas fijas para que toquen el suelo si person.y = 0
+        
         // Piernas
         if (isSitting) {
             CreateLimb("LegL", visuals.transform, new Vector3(-0.15f, 0.5f, 0.4f), new Vector3(0.2f, 0.2f, 0.8f), Color.blue);
@@ -350,8 +361,37 @@ public class KitchenBootstrap : MonoBehaviour
             CreateLimb("LegR", visuals.transform, new Vector3(0.15f, 0.4f, 0), new Vector3(0.2f, 0.8f, 0.2f), Color.blue);
         }
 
+        // Torso
+        GameObject torso = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        torso.name = "Torso"; torso.transform.SetParent(visuals.transform);
+        float torsoY = isSitting ? 0.7f : 1.2f;
+        torso.transform.localPosition = new Vector3(0, torsoY, 0);
+        torso.transform.localScale = new Vector3(0.6f, 0.8f, 0.3f);
+        torso.GetComponent<Renderer>().material.color = c;
+
+        // Cabeza
+        GameObject head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        head.name = "Head"; head.transform.SetParent(visuals.transform);
+        float headY = isSitting ? 1.3f : 1.8f;
+        head.transform.localPosition = new Vector3(0, headY, 0);
+        head.transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+        head.GetComponent<Renderer>().material.color = new Color(0.9f, 0.7f, 0.6f); // Skin tone
+
+        // Ojos
+        GameObject eyeL = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        eyeL.name = "EyeL"; eyeL.transform.SetParent(head.transform);
+        eyeL.transform.localPosition = new Vector3(-0.2f, 0.15f, 0.4f);
+        eyeL.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        eyeL.GetComponent<Renderer>().material.color = Color.black;
+
+        GameObject eyeR = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        eyeR.name = "EyeR"; eyeR.transform.SetParent(head.transform);
+        eyeR.transform.localPosition = new Vector3(0.2f, 0.15f, 0.4f);
+        eyeR.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+        eyeR.GetComponent<Renderer>().material.color = Color.black;
+
         // Brazos
-        float armsY = isSitting ? 0.7f : 1.1f;
+        float armsY = isSitting ? 0.7f : 1.2f;
         float armsZ = isSitting ? 0.3f : 0f;
         Vector3 armsScale = isSitting ? new Vector3(0.15f, 0.15f, 0.7f) : new Vector3(0.15f, 0.7f, 0.15f);
         CreateLimb("ArmL", visuals.transform, new Vector3(-0.4f, armsY, armsZ), armsScale, c);
@@ -433,16 +473,130 @@ public class KitchenBootstrap : MonoBehaviour
         b.GetComponent<Renderer>().material.color = new Color(0.4f, 0.2f, 0.1f);
     }
 
+    private void CreateDoor(string n, Vector3 p, Vector3 s, Color c, Transform par)
+    {
+        GameObject door = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        door.name = n; door.transform.SetParent(par); door.transform.position = p; door.transform.localScale = s;
+        door.GetComponent<Renderer>().material.color = c;
+        if (c.a < 1f) {
+            Material mat = door.GetComponent<Renderer>().material;
+            mat.SetFloat("_Mode", 3); // Transparent
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.EnableKeyword("_ALPHABLEND_ON");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.renderQueue = 3000;
+        }
+    }
+
+    private void CreateAppliance(string n, Vector3 p, Color c, string type, Transform par)
+    {
+        GameObject app = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        app.name = n; app.transform.SetParent(par); app.transform.position = p;
+        app.transform.localScale = new Vector3(4.5f, 2f, 3.5f);
+        app.GetComponent<Renderer>().material.color = c;
+
+        if (type == "Stove") {
+            // Fuego / Placa
+            for (int i = 0; i < 4; i++) {
+                GameObject burner = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                burner.transform.SetParent(app.transform);
+                burner.transform.localPosition = new Vector3((i < 2 ? -0.25f : 0.25f), 0.51f, (i % 2 == 0 ? -0.25f : 0.25f));
+                burner.transform.localScale = new Vector3(0.35f, 0.02f, 0.35f);
+                burner.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.1f);
+            }
+            // Campana extractora
+            GameObject vent = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            vent.name = "Campana"; vent.transform.SetParent(app.transform);
+            vent.transform.localPosition = new Vector3(0, 2.5f, 0.2f);
+            vent.transform.localScale = new Vector3(1f, 0.5f, 0.6f);
+            vent.GetComponent<Renderer>().material.color = new Color(0.7f, 0.7f, 0.7f);
+        } else if (type == "Sink") {
+            GameObject basin = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            basin.transform.SetParent(app.transform);
+            basin.transform.localPosition = new Vector3(0, 0.45f, 0);
+            basin.transform.localScale = new Vector3(0.8f, 0.1f, 0.7f);
+            basin.GetComponent<Renderer>().material.color = new Color(0.4f, 0.5f, 0.6f);
+            // Grifo
+            GameObject tap = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            tap.transform.SetParent(app.transform);
+            tap.transform.localPosition = new Vector3(0, 0.8f, 0.4f);
+            tap.transform.localScale = new Vector3(0.05f, 0.3f, 0.05f);
+        }
+    }
+
+    private void CreateCrateWithIngredients(string n, Vector3 p, string ing, Transform par)
+    {
+        GameObject crateRoot = new GameObject(n);
+        crateRoot.transform.SetParent(par); crateRoot.transform.position = p;
+
+        Color woodColor = new Color(0.45f, 0.3f, 0.15f);
+        // Base
+        GameObject bottom = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        bottom.transform.SetParent(crateRoot.transform); bottom.transform.localScale = new Vector3(2.5f, 0.1f, 2f);
+        bottom.GetComponent<Renderer>().material.color = woodColor;
+
+        // Walls
+        float wallThick = 0.1f;
+        GameObject wallL = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wallL.transform.SetParent(crateRoot.transform); 
+        wallL.transform.localPosition = new Vector3(-1.2f, 0.5f, 0); wallL.transform.localScale = new Vector3(wallThick, 1f, 2f);
+        wallL.GetComponent<Renderer>().material.color = woodColor;
+
+        GameObject wallR = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wallR.transform.SetParent(crateRoot.transform);
+        wallR.transform.localPosition = new Vector3(1.2f, 0.5f, 0); wallR.transform.localScale = new Vector3(wallThick, 1f, 2f);
+        wallR.GetComponent<Renderer>().material.color = woodColor;
+
+        GameObject wallF = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wallF.transform.SetParent(crateRoot.transform);
+        wallF.transform.localPosition = new Vector3(0, 0.5f, 0.95f); wallF.transform.localScale = new Vector3(2.4f, 1f, wallThick);
+        wallF.GetComponent<Renderer>().material.color = woodColor;
+
+        GameObject wallB = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wallB.transform.SetParent(crateRoot.transform);
+        wallB.transform.localPosition = new Vector3(0, 0.5f, -0.95f); wallB.transform.localScale = new Vector3(2.4f, 1f, wallThick);
+        wallB.GetComponent<Renderer>().material.color = woodColor;
+
+        GameObject contents = new GameObject("Contents");
+        contents.transform.SetParent(crateRoot.transform);
+        contents.transform.localPosition = new Vector3(0, 0.4f, 0);
+        IngredientVisualizer.BuildVisual(contents, ing, true);
+    }
+
     private void CreateStation(string n, Vector3 p, Color c, System.Type t, Transform par, string ing = "")
     {
-        GameObject s = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        s.name = n; s.transform.SetParent(par); s.transform.position = p; s.transform.localScale = new Vector3(2f, 1.2f, 2f);
-        s.GetComponent<Renderer>().material.color = c;
-        s.AddComponent(t);
+        GameObject s = new GameObject(n);
+        s.transform.SetParent(par);
+        s.transform.position = p;
+        
         if (t == typeof(DispenserStation)) {
-            DispenserStation ds = s.GetComponent<DispenserStation>();
+            // Visual de la comida real
+            GameObject visual = new GameObject("VisualFood");
+            visual.transform.SetParent(s.transform);
+            visual.transform.localPosition = Vector3.zero;
+            visual.transform.localScale = Vector3.one * 1.5f; // Más grande en la encimera
+            IngredientVisualizer.BuildVisual(visual, ing);
+            
+            // Trigger invisible para interactuar
+            BoxCollider trigger = s.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.size = new Vector3(2, 2, 2);
+            
+            DispenserStation ds = s.AddComponent<DispenserStation>();
             ds.ingredient = ScriptableObject.CreateInstance<IngredientSO>();
             ds.ingredient.ingredientName = ing; ds.ingredient.canBeCut = true;
+        } else {
+            // Estaciones normales como tabla de cortar
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = "Base_" + n;
+            cube.transform.SetParent(s.transform);
+            cube.transform.localPosition = Vector3.zero;
+            cube.transform.localScale = new Vector3(2f, 1.2f, 2f);
+            cube.GetComponent<Renderer>().material.color = c;
+            s.AddComponent(t);
         }
     }
 }

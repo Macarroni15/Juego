@@ -8,14 +8,13 @@ public class DispenserStation : MonoBehaviour, IInteractable
     {
         if (player.GetHeldItem() == null)
         {
-            GameObject itemObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            GameObject itemObj = new GameObject(ingredient.ingredientName);
             itemObj.transform.localScale = Vector3.one * 0.4f;
-            itemObj.name = ingredient.ingredientName;
             
             IngredientItem item = itemObj.AddComponent<IngredientItem>();
             item.data = ingredient;
             
-            itemObj.GetComponent<Renderer>().material.color = GetColor(ingredient.ingredientName);
+            IngredientVisualizer.BuildVisual(itemObj, ingredient.ingredientName, false);
             player.SetHeldItem(itemObj);
         }
     }
