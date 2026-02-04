@@ -225,17 +225,34 @@ public class KitchenBootstrap : MonoBehaviour
         marbleTop.transform.position = new Vector3(0, 2.25f, -5); marbleTop.transform.localScale = new Vector3(41, 0.15f, 2.5f);
         marbleTop.GetComponent<Renderer>().material.color = new Color(0.95f, 0.95f, 0.98f);
         
-        // Llenar la barra de PINTXOS, COPAS y BOTELLAS
-        for (int i = 0; i < 15; i++) {
-            float xPos = -18 + (i * 2.6f);
-            if (i % 3 == 0) CreatePintxo("Pintxo_" + i, new Vector3(xPos, 2.35f, -5), bar.transform);
-            else if (i % 3 == 1) CreateGlass("Copa_" + i, new Vector3(xPos, 2.35f, -5.2f), bar.transform);
-            else CreateBottle("Botella_" + i, new Vector3(xPos, 2.35f, -4.8f), bar.transform);
+        // Llenar la barra de VITRINAS, PINTXOS Y COPAS
+        float surY = 2.33f; // Altura exacta de la superficie de mármol
+        
+        // 1. Zona de Pintxos con Vitrinas
+        string[] pTypes = { "Tortilla", "Chaca", "Pimiento", "Jamon", "Chorizo" };
+        for (int i = 0; i < pTypes.Length; i++) {
+            float xPos = -18 + (i * 5.5f);
+            CreateVitrina("Vitrina_" + pTypes[i], new Vector3(xPos, surY, -5), pTypes[i], bar.transform);
         }
 
-        CreateCashRegister("Caja", new Vector3(-12, 2.35f, -5), bar.transform);
-        CreateOrderScreen("Monitor", new Vector3(0, 2.35f, -5), bar.transform);
-        CreateTPV("Datafono", new Vector3(12, 2.35f, -5), bar.transform);
+        // 2. Zona de Copas y Vasos (Agrupados y sobre la barra)
+        GameObject glassZone = new GameObject("Zona_Copas");
+        glassZone.transform.SetParent(bar.transform);
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 4; c++) {
+                // Posición ajustada para que el vaso (0.5u altura) apoye en la base
+                CreateGlass("Copa_Stock", new Vector3(12 + (r * 0.9f), surY + 0.25f, -5.5f + (c * 0.8f)), glassZone.transform);
+            }
+        }
+
+        // 3. Botellas de reserva (Ajustadas a superficie)
+        for(int i=0; i<6; i++) {
+            CreateBottle("Botella_Exposicion", new Vector3(18.5f, surY, -4.5f - (i*0.6f)), bar.transform);
+        }
+
+        CreateCashRegister("Caja", new Vector3(-12, surY, -5), bar.transform);
+        CreateOrderScreen("Monitor", new Vector3(0, surY, -5), bar.transform);
+        CreateTPV("Datafono", new Vector3(7, surY, -5), bar.transform);
 
         // 7. COCINEROS Y STAFF
         Vector3[] cPos = { new Vector3(10, 0.1f, 32), new Vector3(20, 0.1f, 32), new Vector3(15, 0.1f, 42) };
@@ -714,21 +731,74 @@ public class KitchenBootstrap : MonoBehaviour
         IngredientVisualizer.BuildVisual(contents, ing, true);
     }
 
-    private void CreatePintxo(string n, Vector3 p, Transform par)
+    private void CreateVitrina(string n, Vector3 p, string type, Transform par)
+    {
+        GameObject vitrina = new GameObject(n);
+        vitrina.transform.SetParent(par); vitrina.transform.position = p;
+        
+        // Estructura de cristal: ALTA TRANSPARENCIA
+        GameObject glass = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        glass.name = "Cristal"; glass.transform.SetParent(vitrina.transform);
+        glass.transform.localPosition = new Vector3(0, 0.8f, 0); glass.transform.localScale = new Vector3(3.5f, 1.6f, 1.8f);
+        
+        Material mat = glass.GetComponent<Renderer>().material;
+        mat.color = new Color(0.9f, 0.95f, 1f, 0.08f); // Súper transparente
+        
+        // Configuración oficial de Unity para transparencia en Standard Shader
+        mat.SetFloat("_Mode", 3);
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        mat.DisableKeyword("_ALPHATEST_ON");
+        mat.EnableKeyword("_ALPHABLEND_ON");
+        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        mat.renderQueue = 3000;
+
+        // Marco de la vitrina (Aristas metálicas para que se vea mejor)
+        GameObject frame = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        frame.name = "Marco"; frame.transform.SetParent(vitrina.transform);
+        frame.transform.localPosition = new Vector3(0, 1.6f, 0); frame.transform.localScale = new Vector3(3.6f, 0.05f, 1.9f);
+        frame.GetComponent<Renderer>().material.color = new Color(0.8f, 0.8f, 0.8f);
+
+        // Llenar con pintxos
+        for(int i=0; i<3; i++) {
+            CreatePintxo("Px_" + type, p + new Vector3(-1.0f + (i*1.0f), 0.05f, 0), type, vitrina.transform);
+        }
+    }
+
+    private void CreatePintxo(string n, Vector3 p, string variant, Transform par)
     {
         GameObject pintxo = new GameObject(n);
         pintxo.transform.SetParent(par); pintxo.transform.position = p;
         // Pan
         GameObject bread = GameObject.CreatePrimitive(PrimitiveType.Cube);
         bread.transform.SetParent(pintxo.transform); bread.transform.localPosition = new Vector3(0, 0.05f, 0);
-        bread.transform.localScale = new Vector3(0.4f, 0.15f, 0.4f); bread.GetComponent<Renderer>().material.color = new Color(0.8f, 0.6f, 0.4f);
-        // Ingrediente (Ej: Chorizo o Tomate)
-        GameObject topping = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        bread.transform.localScale = new Vector3(0.5f, 0.15f, 0.5f); bread.GetComponent<Renderer>().material.color = new Color(0.85f, 0.7f, 0.45f);
+        
+        // Topping variado
+        GameObject topping = GameObject.CreatePrimitive(PrimitiveType.Cube);
         topping.transform.SetParent(pintxo.transform); topping.transform.localPosition = new Vector3(0, 0.25f, 0);
-        topping.transform.localScale = new Vector3(0.35f, 0.25f, 0.35f); topping.GetComponent<Renderer>().material.color = Color.red;
+        topping.transform.localScale = new Vector3(0.45f, 0.25f, 0.45f);
+        
+        Color tColor = Color.white;
+        if (variant == "Tortilla") tColor = new Color(1f, 0.85f, 0f);
+        else if (variant == "Chaca") tColor = new Color(1f, 0.95f, 0.9f);
+        else if (variant == "Pimiento") tColor = new Color(0.8f, 0.1f, 0f);
+        else if (variant == "Jamon") tColor = new Color(0.5f, 0.1f, 0.15f);
+        else if (variant == "Chorizo") tColor = new Color(0.9f, 0.3f, 0f);
+        
+        topping.GetComponent<Renderer>().material.color = tColor;
+
+        // Adorno extra (Anchoa u objeto)
+        if (variant == "Pimiento") {
+            GameObject anchovy = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            anchovy.transform.SetParent(topping.transform); anchovy.transform.localPosition = new Vector3(0, 0.6f, 0);
+            anchovy.transform.localScale = new Vector3(1.1f, 0.2f, 0.3f); anchovy.GetComponent<Renderer>().material.color = new Color(0.2f, 0.15f, 0.1f);
+        }
+
         // Palillo
         GameObject stick = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        stick.transform.SetParent(pintxo.transform); stick.transform.localPosition = new Vector3(0, 0.4f, 0);
+        stick.transform.SetParent(pintxo.transform); stick.transform.localPosition = new Vector3(0, 0.45f, 0);
         stick.transform.localScale = new Vector3(0.02f, 0.4f, 0.02f); stick.GetComponent<Renderer>().material.color = new Color(0.9f, 0.8f, 0.6f);
     }
 
