@@ -51,18 +51,10 @@ public class KitchenBootstrap : MonoBehaviour
         l.type = LightType.Directional;
         lightObj.transform.rotation = Quaternion.Euler(50, -30, 0);
 
-        // 2. SUELO GENERAL Y ZONIFICACIÓN
-        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        floor.name = "Suelo_Principal";
-        floor.transform.SetParent(container.transform);
-        floor.transform.localScale = new Vector3(10, 1, 10.5f);
-        floor.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.12f);
+        // 2. SUELO UNIFORME Y ELEGANTE (Toda la superficie interior)
+        CreateTiledFloor("Suelo_Principal", new Vector3(0, 0.01f, 0), new Vector3(64, 1, 105), new Color(0.95f, 0.95f, 0.95f), container.transform);
 
-        // Alfombra de Lujo en Comedor (Desplazada hacia atrás)
-        GameObject rug = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        rug.name = "Alfombra_Comedor"; rug.transform.SetParent(container.transform);
-        rug.transform.position = new Vector3(0, 0.05f, -27); rug.transform.localScale = new Vector3(5, 1, 3.5f);
-        rug.GetComponent<Renderer>().material.color = new Color(0.3f, 0.1f, 0.1f);
+        // (Alfombra eliminada para mantener uniformidad total)
 
         // 3. MUROS EXTERIORES PANORÁMICOS
         // Muro de Fondo (Sólido)
@@ -138,8 +130,8 @@ public class KitchenBootstrap : MonoBehaviour
         GameObject bathroom = new GameObject("Area_Baño");
         bathroom.transform.SetParent(container.transform);
         
-        // Suelo Baño (Sistema de baldosas celeste claro)
-        CreateTiledFloor("Suelo_Baño", new Vector3(-21, 0.05f, 40), new Vector3(22, 1, 30), new Color(0.85f, 0.95f, 1f), bathroom.transform);
+        // Suelo Baño (Mismo que el resto para uniformidad)
+        CreateTiledFloor("Suelo_Baño", new Vector3(-21, 0.051f, 40), new Vector3(22, 1, 30), new Color(0.95f, 0.95f, 0.95f), bathroom.transform);
 
         // Muros Baño para CERRARLO (Ajuste al fondo z=54.5)
         CreateWall("Baño_Wall_DER", new Vector3(-10, 4, 39.75f), new Vector3(0.5f, 8, 29.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
