@@ -94,10 +94,44 @@ public class KitchenBootstrap : MonoBehaviour
             }
         }
 
-        // Suelo Exterior (Para que se vea algo por las ventanas)
+        // SUELO EXTERIOR (PARQUE GIGANTE)
+        GameObject parkContainer = new GameObject("PARQUE_EXTERIOR");
+        parkContainer.transform.SetParent(container.transform);
+
         GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        ground.name = "Exterior_Ground"; ground.transform.position = new Vector3(0, -0.1f, 0);
-        ground.transform.localScale = new Vector3(20, 1, 20); ground.GetComponent<Renderer>().material.color = new Color(0.2f, 0.3f, 0.2f);
+        ground.name = "Suelo_Parque"; ground.transform.SetParent(parkContainer.transform);
+        ground.transform.position = new Vector3(0, -0.2f, 0);
+        ground.transform.localScale = new Vector3(40, 1, 40); // 400x400 unidades
+        ground.GetComponent<Renderer>().material.color = new Color(0.2f, 0.35f, 0.2f);
+
+        // 1. EL RESORT DE LA PISCINA (Privada, Profunda y con Socorrista)
+        CreatePoolArea("Resort_Piscina", new Vector3(-80, -0.1f, 0), new Vector3(45, 1.5f, 30), parkContainer.transform);
+
+        // 2. PARKING Y COCHES (Realismo Urbano)
+        CreateParkingLot("Parking_Principal", new Vector3(0, 0, -85), 12, parkContainer.transform);
+        Color[] carColors = { Color.red, new Color(0.1f, 0.1f, 0.1f), Color.blue, Color.white, Color.gray, new Color(0.1f, 0.4f, 0.1f) };
+        for(int i=0; i<8; i++) {
+            if (i == 3 || i == 6) continue; // Huecos libres
+            float xPos = -27.5f + (i * 5);
+            CreateCar("Coche_Cliente_" + i, new Vector3(xPos, 0, -85), carColors[i % carColors.Length], parkContainer.transform);
+        }
+
+        // 3. ZONA DE PICNIC (Mesas y bancos de madera)
+        Vector3[] picnicPos = { 
+            new Vector3(60, 0, 30), new Vector3(80, 0, 30), new Vector3(100, 0, 30),
+            new Vector3(60, 0, -30), new Vector3(80, 0, -30), new Vector3(100, 0, -30)
+        };
+        foreach(var p in picnicPos) CreatePicnicTable("Mesa_Picnic", p, parkContainer.transform);
+
+        // 4. BOSQUE DE ÁRBOLES (Decoración masiva)
+        for(int i=0; i<40; i++) {
+            float rx = Random.Range(-180f, 180f);
+            float rz = Random.Range(-180f, 180f);
+            // Evitar spawn dentro del edificio o parking
+            if (Mathf.Abs(rx) < 45 && rz > -60) continue; 
+            if (Mathf.Abs(rx) < 40 && rz < -70 && rz > -100) continue; // No árboles en el parking
+            CreateTree("Arbol_Parque_" + i, new Vector3(rx, 0, rz), parkContainer.transform);
+        }
 
 
         // 4. BAÑO REAL Y BONITO (A la izquierda - TOTALMENTE CERRADO)
@@ -846,18 +880,30 @@ public class KitchenBootstrap : MonoBehaviour
         
         Renderer rend = glass.GetComponent<Renderer>();
         
-        // Búsqueda inteligente de shader (Anti-Rosa y Pro-Transparencia)
-        Shader shader = Shader.Find("Standard");
-        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
+        // Búsqueda Ultra-Robusta de Shader (Anti-Rosa definitivo)
+        Shader shader = null;
+        
+        // 1. Intentar URP si está activo
+        if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null)
+            shader = Shader.Find("Universal Render Pipeline/Lit");
+            
+        // 2. Intentar Shaders Estándar y Legacy
+        if (shader == null) shader = Shader.Find("Standard");
         if (shader == null) shader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
+        if (shader == null) shader = Shader.Find("Transparent/Diffuse");
+        if (shader == null) shader = Shader.Find("Unlit/Transparent");
         
-        Material mat = new Material(shader ?? Shader.Find("Transparent/Diffuse"));
-        mat.color = new Color(0.8f, 0.9f, 1f, 0.12f); // Muy transparente
+        // 3. Fail-safe absoluto (Sprites/Default siempre existe y es transparente)
+        if (shader == null) shader = Shader.Find("Sprites/Default");
 
-        // Forzar modo transparente según el shader encontrado
-        if (mat.HasProperty("_Mode")) mat.SetFloat("_Mode", 3); // Standard
-        if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1); // URP Transparent
+        Material mat = new Material(shader);
+        mat.color = new Color(0.8f, 0.9f, 1f, 0.1f); // Muy transparente e invisible
+
+        // Configuración específica según el shader encontrado
+        if (mat.HasProperty("_Mode")) mat.SetFloat("_Mode", 3); // Para Standard
+        if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1); // Para URP (1 = Transparent)
         
+        // Forzar opacidad y renderizado
         mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
         mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
         mat.SetInt("_ZWrite", 0);
@@ -867,6 +913,220 @@ public class KitchenBootstrap : MonoBehaviour
         mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
         
         rend.material = mat;
+    }
+
+    private void CreatePicnicTable(string n, Vector3 p, Transform par)
+    {
+        GameObject group = new GameObject(n);
+        group.transform.SetParent(par); group.transform.position = p;
+        Color wood = new Color(0.4f, 0.25f, 0.15f);
+
+        // Mesa
+        GameObject top = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        top.transform.SetParent(group.transform); top.transform.localPosition = new Vector3(0, 1.25f, 0);
+        top.transform.localScale = new Vector3(4, 0.2f, 6); top.GetComponent<Renderer>().material.color = wood;
+
+        // Bancos (Lados)
+        for(int i=-1; i<=1; i+=2) {
+            GameObject bench = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            bench.transform.SetParent(group.transform); bench.transform.localPosition = new Vector3(i * 3, 0.6f, 0);
+            bench.transform.localScale = new Vector3(1.5f, 0.15f, 6); bench.GetComponent<Renderer>().material.color = wood;
+            // Patas bancos
+            for(int j=-1; j<=1; j+=2) {
+                GameObject pole = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pole.transform.SetParent(bench.transform); pole.transform.localPosition = new Vector3(0, -2, j * 0.4f);
+                pole.transform.localScale = new Vector3(0.2f, 4, 0.1f); pole.GetComponent<Renderer>().material.color = Color.black;
+            }
+        }
+    }
+
+    private void CreatePoolArea(string n, Vector3 p, Vector3 s, Transform par)
+    {
+        GameObject area = new GameObject(n);
+        area.transform.SetParent(par); area.transform.position = p;
+
+        // 1. LA PISCINA PROFUNDA (3m de profundidad real)
+        GameObject pool = new GameObject("Contenedor_Piscina");
+        pool.transform.SetParent(area.transform); pool.transform.localPosition = Vector3.zero;
+        
+        // Borde superior
+        GameObject border = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        border.transform.SetParent(pool.transform); border.transform.localScale = new Vector3(s.x + 2, 0.2f, s.z + 2);
+        border.GetComponent<Renderer>().material.color = Color.white;
+        
+        // Agua (Transparente y profunda con FIX ANTI-ROSA)
+        GameObject water = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        water.name = "Agua"; water.transform.SetParent(pool.transform);
+        water.transform.localPosition = new Vector3(0, 0, 0); water.transform.localScale = new Vector3(s.x, 0.1f, s.z);
+        
+        Renderer rend = water.GetComponent<Renderer>();
+        Shader wShader = null;
+        if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null)
+            wShader = Shader.Find("Universal Render Pipeline/Lit");
+        if (wShader == null) wShader = Shader.Find("Standard");
+        if (wShader == null) wShader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
+        if (wShader == null) wShader = Shader.Find("Sprites/Default");
+        
+        Material mat = new Material(wShader);
+        mat.color = new Color(0, 0.6f, 1f, 0.4f);
+        if (mat.HasProperty("_Mode")) mat.SetFloat("_Mode", 3);
+        if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1);
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        mat.EnableKeyword("_ALPHABLEND_ON");
+        mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        rend.material = mat;
+
+        // Fondo (Foso de baldosas azules)
+        GameObject bottom = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        bottom.transform.SetParent(pool.transform); bottom.transform.localPosition = new Vector3(0, -3.0f, 0);
+        bottom.transform.localScale = new Vector3(s.x, 0.1f, s.z); bottom.GetComponent<Renderer>().material.color = new Color(0.1f, 0.3f, 0.6f);
+        
+        // Paredes del foso
+        for(int i=-1; i<=1; i+=2) {
+            GameObject wX = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wX.transform.SetParent(pool.transform); wX.transform.localPosition = new Vector3(i * s.x/2, -1.5f, 0);
+            wX.transform.localScale = new Vector3(0.1f, 3.0f, s.z); wX.GetComponent<Renderer>().material.color = new Color(0.8f, 0.95f, 1f);
+            
+            GameObject wZ = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wZ.transform.SetParent(pool.transform); wZ.transform.localPosition = new Vector3(0, -1.5f, i * s.z/2);
+            wZ.transform.localScale = new Vector3(s.x, 3.0f, 0.1f); wZ.GetComponent<Renderer>().material.color = new Color(0.8f, 0.95f, 1f);
+        }
+
+        // ESCALERAS DE CROMO
+        for (int i = -1; i <= 1; i += 2) {
+            GameObject rail = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            rail.transform.SetParent(pool.transform);
+            rail.transform.localPosition = new Vector3((s.x/2) - 1, 1.2f, (i * 1.5f));
+            rail.transform.localScale = new Vector3(0.15f, 1.2f, 0.15f);
+            rail.GetComponent<Renderer>().material.color = new Color(0.85f, 0.85f, 0.85f);
+        }
+
+        // 2. VALLADO Y PUERTA (Zona Privada)
+        float fX = s.x/2 + 6; float fZ = s.z/2 + 6;
+        CreateFencePerimeter(area.transform, fX, fZ);
+
+        // 3. DUCHAS (Entrada)
+        CreateShower("Ducha_Doble", new Vector3(fX - 4, 0, fZ - 4), area.transform);
+
+        // 4. SOCORRISTA
+        CreateLifeguardStation(new Vector3(0, 0, fZ - 3), area.transform);
+    }
+
+    private void CreateFencePerimeter(Transform par, float dx, float dz)
+    {
+        Color grey = new Color(0.2f, 0.2f, 0.2f);
+        CreateWall("Fence_N", new Vector3(0, 1.5f, dz), new Vector3(dx*2, 3, 0.2f), par, grey);
+        CreateWall("Fence_S", new Vector3(0, 1.5f, -dz), new Vector3(dx*2, 3, 0.2f), par, grey);
+        CreateWall("Fence_W", new Vector3(-dx, 1.5f, 0), new Vector3(0.2f, 3, dz*2), par, grey);
+        // Lado con Puerta
+        CreateWall("Fence_E1", new Vector3(dx, 1.5f, -dz/2 - 2.5f), new Vector3(0.2f, 3, dz - 5), par, grey);
+        CreateWall("Fence_E2", new Vector3(dx, 1.5f, dz/2 + 2.5f), new Vector3(0.2f, 3, dz - 5), par, grey);
+        CreateDoor("Puerta_Acceso_Piscina", new Vector3(dx, 1.5f, 0), new Vector3(0.2f, 3, 5), new Color(0.3f, 0.3f, 0.3f), par);
+    }
+
+    private void CreateShower(string n, Vector3 p, Transform par)
+    {
+        GameObject sh = new GameObject(n);
+        sh.transform.SetParent(par); sh.transform.position = p;
+        // Base baldosas
+        GameObject b = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        b.transform.SetParent(sh.transform); b.transform.localPosition = new Vector3(0, 0.05f, 0);
+        b.transform.localScale = new Vector3(3, 0.1f, 2); b.GetComponent<Renderer>().material.color = new Color(0.8f, 0.85f, 0.9f);
+        // Poste y grifo
+        GameObject pole = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        pole.transform.SetParent(sh.transform); pole.transform.localPosition = new Vector3(0, 1.5f, -0.7f);
+        pole.transform.localScale = new Vector3(0.12f, 1.5f, 0.12f); pole.GetComponent<Renderer>().material.color = Color.gray;
+        GameObject head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        head.transform.SetParent(sh.transform); head.transform.localPosition = new Vector3(0, 3.0f, -0.4f);
+        head.transform.localScale = new Vector3(0.4f, 0.1f, 0.4f); head.GetComponent<Renderer>().material.color = Color.white;
+    }
+
+    private void CreateLifeguardStation(Vector3 p, Transform par)
+    {
+        GameObject st = new GameObject("Puesto_Socorrista");
+        st.transform.SetParent(par); st.transform.position = p;
+        // Silla alta blanca
+        GameObject baseS = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        baseS.transform.SetParent(st.transform); baseS.transform.localPosition = new Vector3(0, 1.5f, 0);
+        baseS.transform.localScale = new Vector3(1.2f, 3f, 1.2f); baseS.GetComponent<Renderer>().material.color = Color.white;
+        GameObject seat = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        seat.transform.SetParent(st.transform); seat.transform.localPosition = new Vector3(0, 3.1f, 0);
+        seat.transform.localScale = new Vector3(1.5f, 0.2f, 1.5f); seat.GetComponent<Renderer>().material.color = Color.red;
+
+        // Socorrista sentado (ajuste de escala para simular pose)
+        GameObject guard = CreatePerson("Socorrista", p + new Vector3(0, 3.3f, 0), Color.red, st.transform);
+        guard.transform.localScale = new Vector3(0.85f, 0.75f, 0.85f);
+        guard.transform.localRotation = Quaternion.Euler(15, 0, 0); // Vigilando el agua
+    }
+
+    private void CreateParkingLot(string n, Vector3 p, int spaces, Transform par)
+    {
+        GameObject lot = new GameObject(n);
+        lot.transform.SetParent(par); lot.transform.position = p;
+        float lotWidth = spaces * 5;
+        float lotDepth = 20;
+
+        // Asfalto
+        GameObject asphalt = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        asphalt.transform.SetParent(lot.transform); asphalt.transform.localPosition = Vector3.zero;
+        asphalt.transform.localScale = new Vector3(lotWidth + 4, 0.1f, lotDepth);
+        asphalt.GetComponent<Renderer>().material.color = new Color(0.15f, 0.15f, 0.18f);
+
+        // Líneas de Parking
+        for (int i = 0; i <= spaces; i++) {
+            GameObject line = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            line.transform.SetParent(lot.transform);
+            line.transform.localPosition = new Vector3((-lotWidth / 2) + (i * 5), 0.06f, 0);
+            line.transform.localScale = new Vector3(0.15f, 0.02f, lotDepth * 0.7f);
+            line.GetComponent<Renderer>().material.color = Color.white;
+        }
+    }
+
+    private void CreateCar(string n, Vector3 p, Color c, Transform par)
+    {
+        GameObject car = new GameObject(n);
+        car.transform.SetParent(par); car.transform.position = p;
+        
+        // Chasis
+        GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        body.transform.SetParent(car.transform); body.transform.localPosition = new Vector3(0, 0.8f, 0);
+        body.transform.localScale = new Vector3(2.2f, 0.9f, 4.5f); body.GetComponent<Renderer>().material.color = c;
+        // Cabina
+        GameObject cab = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        cab.transform.SetParent(car.transform); cab.transform.localPosition = new Vector3(0, 1.5f, -0.4f);
+        cab.transform.localScale = new Vector3(2f, 0.7f, 2.4f); cab.GetComponent<Renderer>().material.color = c;
+        // Cristales
+        GameObject win = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        win.transform.SetParent(car.transform); win.transform.localPosition = new Vector3(0, 1.5f, 0.8f);
+        win.transform.localScale = new Vector3(1.8f, 0.55f, 0.05f); win.GetComponent<Renderer>().material.color = new Color(0.1f, 0.15f, 0.2f);
+
+        // Ruedas (4)
+        for(int x=-1; x<=1; x+=2) {
+            for(int z=-1; z<=1; z+=2) {
+                GameObject wheel = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                wheel.transform.SetParent(car.transform);
+                wheel.transform.localPosition = new Vector3(x * 1.1f, 0.4f, z * 1.5f);
+                wheel.transform.localScale = new Vector3(0.8f, 0.1f, 0.8f);
+                wheel.transform.localRotation = Quaternion.Euler(0, 0, 90);
+                wheel.GetComponent<Renderer>().material.color = Color.black;
+            }
+        }
+    }
+
+    private void CreateTree(string n, Vector3 p, Transform par)
+    {
+        GameObject tree = new GameObject(n);
+        tree.transform.SetParent(par); tree.transform.position = p;
+        // Tronco
+        GameObject trunk = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        trunk.transform.SetParent(tree.transform); trunk.transform.localPosition = new Vector3(0, 2, 0);
+        trunk.transform.localScale = new Vector3(0.8f, 2, 0.8f); trunk.GetComponent<Renderer>().material.color = new Color(0.3f, 0.2f, 0.1f);
+        // Hojas
+        GameObject leaves = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        leaves.transform.SetParent(tree.transform); leaves.transform.localPosition = new Vector3(0, 5, 0);
+        leaves.transform.localScale = new Vector3(5, 5, 5); leaves.GetComponent<Renderer>().material.color = new Color(0.1f, 0.4f, 0.1f);
     }
 
     private void CreateStation(string n, Vector3 p, Color c, System.Type t, Transform par, string ing = "")
