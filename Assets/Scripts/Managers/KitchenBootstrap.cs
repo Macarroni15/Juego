@@ -88,12 +88,8 @@ public class KitchenBootstrap : MonoBehaviour
         GameObject bathroom = new GameObject("Area_Baño");
         bathroom.transform.SetParent(container.transform);
         
-        // Suelo Baño (Alineado con el edificio: 22x30 unidades)
-        GameObject bathFloor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        bathFloor.transform.SetParent(bathroom.transform);
-        bathFloor.transform.position = new Vector3(-21, 0.02f, 40);
-        bathFloor.transform.localScale = new Vector3(2.2f, 1, 3.0f); 
-        bathFloor.GetComponent<Renderer>().material.color = new Color(0.85f, 0.95f, 1f);
+        // Suelo Baño (Sistema de baldosas celeste claro)
+        CreateTiledFloor("Suelo_Baño", new Vector3(-21, 0.05f, 40), new Vector3(22, 1, 30), new Color(0.85f, 0.95f, 1f), bathroom.transform);
 
         // Muros Baño para CERRARLO (Ajuste al fondo z=54.5)
         CreateWall("Baño_Wall_DER", new Vector3(-10, 4, 39.75f), new Vector3(0.5f, 8, 29.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
@@ -121,12 +117,8 @@ public class KitchenBootstrap : MonoBehaviour
         GameObject kitchen = new GameObject("Area_Cocina");
         kitchen.transform.SetParent(container.transform);
         
-        // SUELO COCINA MODERNO (Patrón de Pizarra Oscura)
-        GameObject kFloor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        kFloor.transform.SetParent(kitchen.transform);
-        kFloor.transform.position = new Vector3(16, 0.02f, 38);
-        kFloor.transform.localScale = new Vector3(3.2f, 1, 3.2f); // Más grande para cubrir toda la zona
-        kFloor.GetComponent<Renderer>().material.color = new Color(0.12f, 0.12f, 0.15f);
+        // SUELO COCINA GASTRONÓMICO (Baldosas Blancas Pulidas)
+        CreateTiledFloor("Suelo_Cocina", new Vector3(16, 0.05f, 40), new Vector3(32, 1, 30), new Color(0.95f, 0.95f, 0.95f), kitchen.transform);
 
         // Muros Cocina (AJUSTE MATEMÁTICO - TERMINA EN 54.5)
         CreateWall("Cocina_Wall_IZQ", new Vector3(0, 4, 39.75f), new Vector3(1f, 8, 29.5f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
@@ -795,6 +787,39 @@ public class KitchenBootstrap : MonoBehaviour
         GameObject neck = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         neck.transform.SetParent(bottle.transform); neck.transform.localPosition = new Vector3(0, 0.9f, 0);
         neck.transform.localScale = new Vector3(0.05f, 0.15f, 0.05f); neck.GetComponent<Renderer>().material.color = new Color(0.1f, 0.3f, 0.1f);
+    }
+
+    private void CreateTiledFloor(string n, Vector3 pos, Vector3 totalSize, Color c, Transform par)
+    {
+        GameObject floorGrid = new GameObject(n);
+        floorGrid.transform.SetParent(par); floorGrid.transform.position = pos;
+        
+        int tilesX = 10; int tilesZ = 10;
+        float stepX = totalSize.x / tilesX;
+        float stepZ = totalSize.z / tilesZ;
+
+        for (int x = 0; x < tilesX; x++) {
+            for (int z = 0; z < tilesZ; z++) {
+                GameObject tile = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                tile.name = n + "_Baldosa_" + x + "_" + z;
+                tile.transform.SetParent(floorGrid.transform);
+                // Posicionamos cada baldosa con una pequeña separación (junta)
+                Vector3 tPos = new Vector3(
+                    (-totalSize.x/2) + (x * stepX) + stepX/2,
+                    0,
+                    (-totalSize.z/2) + (z * stepZ) + stepZ/2
+                );
+                tile.transform.localPosition = tPos;
+                tile.transform.localScale = new Vector3(stepX * 0.96f, 0.1f, stepZ * 0.96f);
+                tile.GetComponent<Renderer>().material.color = c;
+            }
+        }
+        // Fondo oscuro para las juntas
+        GameObject grout = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        grout.name = "Juntas"; grout.transform.SetParent(floorGrid.transform);
+        grout.transform.localPosition = new Vector3(0, -0.05f, 0);
+        grout.transform.localScale = new Vector3(totalSize.x, 0.05f, totalSize.z);
+        grout.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.1f);
     }
 
     private void CreateStation(string n, Vector3 p, Color c, System.Type t, Transform par, string ing = "")
