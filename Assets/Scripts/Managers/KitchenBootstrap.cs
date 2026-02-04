@@ -64,10 +64,12 @@ public class KitchenBootstrap : MonoBehaviour
         rug.transform.position = new Vector3(0, 0.05f, -27); rug.transform.localScale = new Vector3(5, 1, 3.5f);
         rug.GetComponent<Renderer>().material.color = new Color(0.3f, 0.1f, 0.1f);
 
-        // 3. MUROS EXTERIORES CON VENTANALES
-        CreateWall("Muro_Fondo", new Vector3(0, 4, 55), new Vector3(64, 8, 1), container.transform);
-        CreateWall("Muro_Izq", new Vector3(-32, 4, 2.5f), new Vector3(1, 8, 105), container.transform);
-        CreateWall("Muro_Der", new Vector3(32, 4, 2.5f), new Vector3(1, 8, 105), container.transform);
+        // 3. MUROS EXTERIORES CON VENTANALES (ALINEACIÓN PERFECTA)
+        // Fondo a 65 para cubrir el grosor de los laterales (1 unidad)
+        CreateWall("Muro_Fondo", new Vector3(0, 4, 55), new Vector3(65, 8, 1), container.transform);
+        // Laterales terminan en 54.5 para no asomar por detrás del muro de fondo
+        CreateWall("Muro_Izq", new Vector3(-32, 4, 2.25f), new Vector3(1, 8, 104.5f), container.transform);
+        CreateWall("Muro_Der", new Vector3(32, 4, 2.25f), new Vector3(1, 8, 104.5f), container.transform);
         CreateWall("Muro_Frontal_L", new Vector3(-18, 4, -50), new Vector3(28, 8, 1), container.transform);
         CreateWall("Muro_Frontal_R", new Vector3(18, 4, -50), new Vector3(28, 8, 1), container.transform);
 
@@ -93,8 +95,8 @@ public class KitchenBootstrap : MonoBehaviour
         bathFloor.transform.localScale = new Vector3(2.2f, 1, 3.0f); 
         bathFloor.GetComponent<Renderer>().material.color = new Color(0.85f, 0.95f, 1f);
 
-        // Muros Baño para CERRARLO
-        CreateWall("Baño_Wall_DER", new Vector3(-10, 4, 40), new Vector3(0.5f, 8, 30), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
+        // Muros Baño para CERRARLO (Ajuste al fondo z=54.5)
+        CreateWall("Baño_Wall_DER", new Vector3(-10, 4, 39.75f), new Vector3(0.5f, 8, 29.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
         // Muro frontal partido para la PUERTA
         CreateWall("Baño_Wall_FRON_L", new Vector3(-29, 4, 25), new Vector3(6, 8, 0.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
         CreateWall("Baño_Wall_FRON_R", new Vector3(-15.5f, 4, 25), new Vector3(11, 8, 0.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
@@ -125,8 +127,8 @@ public class KitchenBootstrap : MonoBehaviour
         kFloor.transform.localScale = new Vector3(3.2f, 1, 3.2f); // Más grande para cubrir toda la zona
         kFloor.GetComponent<Renderer>().material.color = new Color(0.12f, 0.12f, 0.15f);
 
-        // Muros Cocina (AJUSTE MATEMÁTICO PARA SELLADO TOTAL)
-        CreateWall("Cocina_Wall_IZQ", new Vector3(0, 4, 38), new Vector3(1f, 8, 33), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
+        // Muros Cocina (AJUSTE MATEMÁTICO - TERMINA EN 54.5)
+        CreateWall("Cocina_Wall_IZQ", new Vector3(0, 4, 39.75f), new Vector3(1f, 8, 29.5f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
         // Frente partido: La suma de anchos debe cubrir exactamente x=0 a x=32
         // L: Centro 7.5, Ancho 15 -> Cubre 0 a 15
         CreateWall("Cocina_Wall_FRON_L", new Vector3(7.5f, 4, 25), new Vector3(15, 8, 0.6f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
@@ -213,13 +215,27 @@ public class KitchenBootstrap : MonoBehaviour
             shelf.GetComponent<Renderer>().material.color = new Color(0.5f, 0.5f, 0.5f);
         }
 
-        // 6. MOSTRADOR Y BARRA
+        // 6. MOSTRADOR Y BARRA DE PINTXOS (Elegante y Detallada)
         GameObject bar = new GameObject("Barra_Pedidos");
         bar.transform.SetParent(container.transform);
-        CreateBar("Mueble_Barra", new Vector3(0, 1.5f, -5), new Vector3(40, 3, 2), bar.transform);
-        CreateCashRegister("Caja", new Vector3(-5, 3.1f, -5), bar.transform);
-        CreateOrderScreen("Monitor", new Vector3(0, 3.1f, -5), bar.transform);
-        CreateTPV("Datafono", new Vector3(5, 3.1f, -5), bar.transform);
+        // Barra principal con tope de mármol
+        CreateBar("Mueble_Barra", new Vector3(0, 1.1f, -5), new Vector3(40, 2.2f, 2), bar.transform);
+        GameObject marbleTop = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        marbleTop.name = "Tope_Marmol"; marbleTop.transform.SetParent(bar.transform);
+        marbleTop.transform.position = new Vector3(0, 2.25f, -5); marbleTop.transform.localScale = new Vector3(41, 0.15f, 2.5f);
+        marbleTop.GetComponent<Renderer>().material.color = new Color(0.95f, 0.95f, 0.98f);
+        
+        // Llenar la barra de PINTXOS, COPAS y BOTELLAS
+        for (int i = 0; i < 15; i++) {
+            float xPos = -18 + (i * 2.6f);
+            if (i % 3 == 0) CreatePintxo("Pintxo_" + i, new Vector3(xPos, 2.35f, -5), bar.transform);
+            else if (i % 3 == 1) CreateGlass("Copa_" + i, new Vector3(xPos, 2.35f, -5.2f), bar.transform);
+            else CreateBottle("Botella_" + i, new Vector3(xPos, 2.35f, -4.8f), bar.transform);
+        }
+
+        CreateCashRegister("Caja", new Vector3(-12, 2.35f, -5), bar.transform);
+        CreateOrderScreen("Monitor", new Vector3(0, 2.35f, -5), bar.transform);
+        CreateTPV("Datafono", new Vector3(12, 2.35f, -5), bar.transform);
 
         // 7. COCINEROS Y STAFF
         Vector3[] cPos = { new Vector3(10, 0.1f, 32), new Vector3(20, 0.1f, 32), new Vector3(15, 0.1f, 42) };
@@ -227,7 +243,9 @@ public class KitchenBootstrap : MonoBehaviour
             GameObject c = CreatePerson("Cocinero_" + i, cPos[i], Color.white, null);
             c.AddComponent<PlayerController>(); c.AddComponent<PlayerInput>();
         }
-        CreatePerson("Staff", new Vector3(0, 0.1f, -2), new Color(0.2f, 0.4f, 0.7f), null).transform.rotation = Quaternion.Euler(0, 180, 0);
+        GameObject staff = CreatePerson("Staff_Senior", new Vector3(0, 0.1f, -2), new Color(0.2f, 0.4f, 0.7f), null);
+        staff.transform.rotation = Quaternion.Euler(0, 180, 0);
+        staff.transform.localScale = new Vector3(1.1f, 1.25f, 1.1f); // Personaje más alto para la barra
 
         // 8. DESPENSA DE INGREDIENTES (TODOS JUNTOS EN UNA MESA)
         GameObject pantry = new GameObject("Despensa_Ingredientes");
@@ -694,6 +712,44 @@ public class KitchenBootstrap : MonoBehaviour
         contents.transform.SetParent(crateRoot.transform);
         contents.transform.localPosition = new Vector3(0, 0.4f, 0);
         IngredientVisualizer.BuildVisual(contents, ing, true);
+    }
+
+    private void CreatePintxo(string n, Vector3 p, Transform par)
+    {
+        GameObject pintxo = new GameObject(n);
+        pintxo.transform.SetParent(par); pintxo.transform.position = p;
+        // Pan
+        GameObject bread = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        bread.transform.SetParent(pintxo.transform); bread.transform.localPosition = new Vector3(0, 0.05f, 0);
+        bread.transform.localScale = new Vector3(0.4f, 0.15f, 0.4f); bread.GetComponent<Renderer>().material.color = new Color(0.8f, 0.6f, 0.4f);
+        // Ingrediente (Ej: Chorizo o Tomate)
+        GameObject topping = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        topping.transform.SetParent(pintxo.transform); topping.transform.localPosition = new Vector3(0, 0.25f, 0);
+        topping.transform.localScale = new Vector3(0.35f, 0.25f, 0.35f); topping.GetComponent<Renderer>().material.color = Color.red;
+        // Palillo
+        GameObject stick = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        stick.transform.SetParent(pintxo.transform); stick.transform.localPosition = new Vector3(0, 0.4f, 0);
+        stick.transform.localScale = new Vector3(0.02f, 0.4f, 0.02f); stick.GetComponent<Renderer>().material.color = new Color(0.9f, 0.8f, 0.6f);
+    }
+
+    private void CreateGlass(string n, Vector3 p, Transform par)
+    {
+        GameObject glass = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        glass.name = n; glass.transform.SetParent(par); glass.transform.position = p;
+        glass.transform.localScale = new Vector3(0.15f, 0.25f, 0.15f);
+        glass.GetComponent<Renderer>().material.color = new Color(0.8f, 0.9f, 1f, 0.4f);
+    }
+
+    private void CreateBottle(string n, Vector3 p, Transform par)
+    {
+        GameObject bottle = new GameObject(n);
+        bottle.transform.SetParent(par); bottle.transform.position = p;
+        GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        body.transform.SetParent(bottle.transform); body.transform.localPosition = new Vector3(0, 0.4f, 0);
+        body.transform.localScale = new Vector3(0.15f, 0.4f, 0.15f); body.GetComponent<Renderer>().material.color = new Color(0.1f, 0.3f, 0.1f);
+        GameObject neck = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        neck.transform.SetParent(bottle.transform); neck.transform.localPosition = new Vector3(0, 0.9f, 0);
+        neck.transform.localScale = new Vector3(0.05f, 0.15f, 0.05f); neck.GetComponent<Renderer>().material.color = new Color(0.1f, 0.3f, 0.1f);
     }
 
     private void CreateStation(string n, Vector3 p, Color c, System.Type t, Transform par, string ing = "")
