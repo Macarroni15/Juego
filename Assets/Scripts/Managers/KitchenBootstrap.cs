@@ -225,14 +225,24 @@ public class KitchenBootstrap : MonoBehaviour
         marbleTop.transform.position = new Vector3(0, 2.25f, -5); marbleTop.transform.localScale = new Vector3(41, 0.15f, 2.5f);
         marbleTop.GetComponent<Renderer>().material.color = new Color(0.95f, 0.95f, 0.98f);
         
-        // Llenar la barra de VITRINAS, PINTXOS Y COPAS
-        float surY = 2.33f; // Altura exacta de la superficie de mármol
+        // Llenar la barra de PINTXOS EN PLATOS Y COPAS (Sin vitrinas)
+        float surY = 2.33f;
         
-        // 1. Zona de Pintxos con Vitrinas
-        string[] pTypes = { "Tortilla", "Chaca", "Pimiento", "Jamon", "Chorizo" };
+        // 1. Zona de Pintxos (Presentación abierta en platos)
+        string[] pTypes = { "Tortilla", "Chaca", "Pimiento", "Jamon", "Chorizo", "Tortilla", "Jamon" };
         for (int i = 0; i < pTypes.Length; i++) {
-            float xPos = -18 + (i * 5.5f);
-            CreateVitrina("Vitrina_" + pTypes[i], new Vector3(xPos, surY, -5), pTypes[i], bar.transform);
+            float xPos = -18 + (i * 4.2f);
+            Vector3 pPos = new Vector3(xPos, surY, -5);
+            
+            // Plato de cerámica blanca
+            GameObject plate = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            plate.name = "Plato_Pintxo"; plate.transform.SetParent(bar.transform);
+            plate.transform.position = pPos + new Vector3(0, 0.025f, 0); // Ligeramente sobre el mármol
+            plate.transform.localScale = new Vector3(1.2f, 0.02f, 1.2f);
+            plate.GetComponent<Renderer>().material.color = Color.white;
+
+            // El Pintxo encima
+            CreatePintxo("Px_Barra_" + i, pPos + new Vector3(0, 0.05f, 0), pTypes[i], bar.transform);
         }
 
         // 2. Zona de Copas y Vasos (Agrupados y sobre la barra)
@@ -729,41 +739,6 @@ public class KitchenBootstrap : MonoBehaviour
         contents.transform.SetParent(crateRoot.transform);
         contents.transform.localPosition = new Vector3(0, 0.4f, 0);
         IngredientVisualizer.BuildVisual(contents, ing, true);
-    }
-
-    private void CreateVitrina(string n, Vector3 p, string type, Transform par)
-    {
-        GameObject vitrina = new GameObject(n);
-        vitrina.transform.SetParent(par); vitrina.transform.position = p;
-        
-        // Estructura de cristal: ALTA TRANSPARENCIA
-        GameObject glass = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        glass.name = "Cristal"; glass.transform.SetParent(vitrina.transform);
-        glass.transform.localPosition = new Vector3(0, 0.8f, 0); glass.transform.localScale = new Vector3(3.5f, 1.6f, 1.8f);
-        
-        Material mat = glass.GetComponent<Renderer>().material;
-        mat.color = new Color(0.9f, 0.95f, 1f, 0.08f); // Súper transparente
-        
-        // Configuración oficial de Unity para transparencia en Standard Shader
-        mat.SetFloat("_Mode", 3);
-        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        mat.SetInt("_ZWrite", 0);
-        mat.DisableKeyword("_ALPHATEST_ON");
-        mat.EnableKeyword("_ALPHABLEND_ON");
-        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        mat.renderQueue = 3000;
-
-        // Marco de la vitrina (Aristas metálicas para que se vea mejor)
-        GameObject frame = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        frame.name = "Marco"; frame.transform.SetParent(vitrina.transform);
-        frame.transform.localPosition = new Vector3(0, 1.6f, 0); frame.transform.localScale = new Vector3(3.6f, 0.05f, 1.9f);
-        frame.GetComponent<Renderer>().material.color = new Color(0.8f, 0.8f, 0.8f);
-
-        // Llenar con pintxos
-        for(int i=0; i<3; i++) {
-            CreatePintxo("Px_" + type, p + new Vector3(-1.0f + (i*1.0f), 0.05f, 0), type, vitrina.transform);
-        }
     }
 
     private void CreatePintxo(string n, Vector3 p, string variant, Transform par)
