@@ -64,25 +64,41 @@ public class KitchenBootstrap : MonoBehaviour
         rug.transform.position = new Vector3(0, 0.05f, -27); rug.transform.localScale = new Vector3(5, 1, 3.5f);
         rug.GetComponent<Renderer>().material.color = new Color(0.3f, 0.1f, 0.1f);
 
-        // 3. MUROS EXTERIORES CON VENTANALES (ALINEACIÓN PERFECTA)
-        // Fondo a 65 para cubrir el grosor de los laterales (1 unidad)
+        // 3. MUROS EXTERIORES PANORÁMICOS
+        // Muro de Fondo (Sólido)
         CreateWall("Muro_Fondo", new Vector3(0, 4, 55), new Vector3(65, 8, 1), container.transform);
-        // Laterales terminan en 54.5 para no asomar por detrás del muro de fondo
-        CreateWall("Muro_Izq", new Vector3(-32, 4, 2.25f), new Vector3(1, 8, 104.5f), container.transform);
-        CreateWall("Muro_Der", new Vector3(32, 4, 2.25f), new Vector3(1, 8, 104.5f), container.transform);
+        
+        // Muros Frontales
         CreateWall("Muro_Frontal_L", new Vector3(-18, 4, -50), new Vector3(28, 8, 1), container.transform);
         CreateWall("Muro_Frontal_R", new Vector3(18, 4, -50), new Vector3(28, 8, 1), container.transform);
+        CreateWall("Muro_Frontal_Top", new Vector3(0, 6.5f, -50), new Vector3(8, 3, 1), container.transform);
+        CreateDoor("Puerta_Principal", new Vector3(0, 2.5f, -50.1f), new Vector3(8.5f, 5, 0.25f), new Color(0.4f, 0.2f, 0.1f), container.transform);
 
-        // Decoración de Ventanales (Visuales)
-        for(int i=-1; i<=1; i+=2) {
-            for(int j=0; j<3; j++) {
-                GameObject win = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                win.name = "Ventana"; win.transform.SetParent(container.transform);
-                win.transform.position = new Vector3(i * 31.8f, 5, -15 - (j * 15));
-                win.transform.localScale = new Vector3(0.5f, 4, 8);
-                win.GetComponent<Renderer>().material.color = new Color(0.7f, 0.8f, 1f, 0.4f);
+        // MUROS LATERALES CON VENTANALES PANORÁMICOS
+        float[] sideX = { -32f, 32f };
+        foreach(float x in sideX) {
+            string sideName = x < 0 ? "Izq" : "Der";
+            // Zócalo inferior
+            CreateWall("Zocalo_" + sideName, new Vector3(x, 1f, 2.25f), new Vector3(1, 2, 104.5f), container.transform);
+            // Parte superior
+            CreateWall("Dintel_" + sideName, new Vector3(x, 7.5f, 2.25f), new Vector3(1, 1, 104.5f), container.transform);
+            
+            // Pilares y Cristal
+            for(int i=0; i<6; i++) {
+                float zPillar = -50 + (i * 20.9f);
+                CreateWall("Pilar_" + sideName + "_" + i, new Vector3(x, 4.5f, zPillar), new Vector3(1.1f, 5f, 1.5f), container.transform);
+                if(i < 5) {
+                    float zWin = zPillar + 10.45f;
+                    CreateGlassWindow("Ventana_" + sideName + "_" + i, new Vector3(x, 4.5f, zWin), new Vector3(0.2f, 5f, 19.4f), container.transform);
+                }
             }
         }
+
+        // Suelo Exterior (Para que se vea algo por las ventanas)
+        GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        ground.name = "Exterior_Ground"; ground.transform.position = new Vector3(0, -0.1f, 0);
+        ground.transform.localScale = new Vector3(20, 1, 20); ground.GetComponent<Renderer>().material.color = new Color(0.2f, 0.3f, 0.2f);
+
 
         // 4. BAÑO REAL Y BONITO (A la izquierda - TOTALMENTE CERRADO)
         GameObject bathroom = new GameObject("Area_Baño");
@@ -820,6 +836,37 @@ public class KitchenBootstrap : MonoBehaviour
         grout.transform.localPosition = new Vector3(0, -0.05f, 0);
         grout.transform.localScale = new Vector3(totalSize.x, 0.05f, totalSize.z);
         grout.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.1f);
+    }
+
+    private void CreateGlassWindow(string n, Vector3 p, Vector3 s, Transform par)
+    {
+        GameObject glass = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        glass.name = n; glass.transform.SetParent(par); glass.transform.position = p;
+        glass.transform.localScale = s;
+        
+        Renderer rend = glass.GetComponent<Renderer>();
+        
+        // Búsqueda inteligente de shader (Anti-Rosa y Pro-Transparencia)
+        Shader shader = Shader.Find("Standard");
+        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null) shader = Shader.Find("Legacy Shaders/Transparent/Diffuse");
+        
+        Material mat = new Material(shader ?? Shader.Find("Transparent/Diffuse"));
+        mat.color = new Color(0.8f, 0.9f, 1f, 0.12f); // Muy transparente
+
+        // Forzar modo transparente según el shader encontrado
+        if (mat.HasProperty("_Mode")) mat.SetFloat("_Mode", 3); // Standard
+        if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1); // URP Transparent
+        
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        
+        mat.EnableKeyword("_ALPHABLEND_ON");
+        mat.SetOverrideTag("RenderType", "Transparent");
+        mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+        
+        rend.material = mat;
     }
 
     private void CreateStation(string n, Vector3 p, Color c, System.Type t, Transform par, string ing = "")
