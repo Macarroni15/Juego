@@ -97,13 +97,14 @@ public class KitchenBootstrap : MonoBehaviour
 
         // Muros Baño para CERRARLO (Ajuste al fondo z=54.5)
         CreateWall("Baño_Wall_DER", new Vector3(-10, 4, 39.75f), new Vector3(0.5f, 8, 29.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
-        // Muro frontal partido para la PUERTA
+        // Muro frontal partido para la PUERTA (Hueco de 5 unidades)
         CreateWall("Baño_Wall_FRON_L", new Vector3(-29, 4, 25), new Vector3(6, 8, 0.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
         CreateWall("Baño_Wall_FRON_R", new Vector3(-15.5f, 4, 25), new Vector3(11, 8, 0.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
-        CreateWall("Baño_Wall_FRON_Top", new Vector3(-23.5f, 6.5f, 25), new Vector3(5, 3, 0.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
+        // Top y Puerta con overlap de seguridad aumentado
+        CreateWall("Baño_Wall_FRON_Top", new Vector3(-23.5f, 6.5f, 25), new Vector3(6.5f, 3, 0.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
         
-        // Puerta del Baño
-        CreateDoor("Puerta_Entrada_Baño", new Vector3(-23.5f, 2.5f, 25.1f), new Vector3(4, 5, 0.2f), new Color(0.4f, 0.2f, 0f), bathroom.transform);
+        // Puerta del Baño (Sellado total con Z=25.02 y ancho extra)
+        CreateDoor("Puerta_Entrada_Baño", new Vector3(-23.5f, 2.5f, 25.02f), new Vector3(5.8f, 5, 0.2f), new Color(0.4f, 0.2f, 0f), bathroom.transform);
 
         // Mobiliario Baño
         // Mueble Lavabo (Vanity)
@@ -132,14 +133,13 @@ public class KitchenBootstrap : MonoBehaviour
         // Frente partido: La suma de anchos debe cubrir exactamente x=0 a x=32
         // L: Centro 7.5, Ancho 15 -> Cubre 0 a 15
         CreateWall("Cocina_Wall_FRON_L", new Vector3(7.5f, 4, 25), new Vector3(15, 8, 0.6f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
-        // R: Centro 25, Ancho 14 -> Cubre 18 a 32 (Hueco de 3 unidades para puerta de 4.5?) 
-        // Vamos a darle 6 unidades de puerta:
+        // R: Centro 25.5, Ancho 13 -> Cubre 19 a 32
         CreateWall("Cocina_Wall_FRON_R", new Vector3(25.5f, 4, 25), new Vector3(13, 8, 0.6f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
-        // Hueco queda entre x=15 y x=19 (4 unidades). Puerta de 4.5 para overlap.
-        CreateWall("Cocina_Wall_FRON_Top", new Vector3(17, 6.5f, 25), new Vector3(4.5f, 3, 0.6f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
+        // Hueco queda entre x=15 y x=19 (4 unidades). Usamos ancho 5.5 para sellar totalmente los lados.
+        CreateWall("Cocina_Wall_FRON_Top", new Vector3(17, 6.5f, 25), new Vector3(5.5f, 3, 0.6f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
         
-        // Puerta de la Cocina (Ajuste preciso a x=17)
-        CreateDoor("Puerta_Modern_Cocina", new Vector3(17, 2.5f, 25.1f), new Vector3(4.5f, 5, 0.2f), new Color(0.4f, 0.25f, 0.1f), kitchen.transform);
+        // Puerta de la Cocina (Z muy pegada al muro para evitar fugas de luz)
+        CreateDoor("Puerta_Modern_Cocina", new Vector3(17, 2.5f, 25.02f), new Vector3(5.2f, 5, 0.15f), new Color(0.4f, 0.25f, 0.1f), kitchen.transform);
 
         // Decoración Azulejos (Centrados y contenidos)
         for(int tx=3; tx<28; tx+=4) {
