@@ -12,6 +12,10 @@ public class KitchenBootstrap : MonoBehaviour
     private GameObject menuCanvas;
     private GameObject currentMenuPanel;
 
+    [Header("Configuración del Mapa")]
+    [Tooltip("Arrastra aquí el objeto del restaurante si ya existe en la escena.")]
+    public GameObject restauranteContainer;
+
     private void Start()
     {
         // Solo ejecutar lógica de juego si estamos dando al Play
@@ -74,7 +78,21 @@ public class KitchenBootstrap : MonoBehaviour
         // Botones
         CrearBoton(currentMenuPanel, "INICIAR JUEGO", 0, 30, Color.green, () => {
             Destroy(menuCanvas); // Adios menú
-            GenerarRestaurante(); // HOLA JUEGO
+            
+            // Solo generar si no existe ya en la escena (manual o previo)
+            if (restauranteContainer == null)
+            {
+                restauranteContainer = GameObject.Find("Restaurante_Permanente");
+            }
+
+            if (restauranteContainer == null)
+            {
+                GenerarRestaurante(); // HOLA JUEGO
+            }
+            else
+            {
+                Debug.Log("Restaurante ya presente, saltando generación.");
+            }
         });
 
         CrearBoton(currentMenuPanel, "TUTORIAL", 0, -50, Color.cyan, mostrarTutorial);
@@ -174,17 +192,26 @@ public class KitchenBootstrap : MonoBehaviour
     // AQUI EMPIEZA LA GENERACION DEL RESTAURANTE (EL CODIGO ORIGINAL QUE YA FUNCIONABA)
     // ==============================================================================================
 
+    [ContextMenu("Generar Restaurante en Editor")]
     public void GenerarRestaurante()
     {
         Debug.Log(">>> GENERANDO RESTAURANTE... <<<<");
 
-        string containerName = "RESTAURANTE_GENERADO_AUTOMATICAMENTE";
+        string containerName = "Restaurante_Permanente";
         
-        GameObject old = GameObject.Find(containerName);
-        if (old != null) Destroy(old);
+        // Si ya tenemos una referencia o existe uno con el nombre, lo limpiamos para regenerar
+        if (restauranteContainer == null) restauranteContainer = GameObject.Find(containerName);
 
-        GameObject container = new GameObject(containerName);
-        container.transform.position = Vector3.zero;
+        if (restauranteContainer != null)
+        {
+            if (Application.isPlaying) Destroy(restauranteContainer);
+            else DestroyImmediate(restauranteContainer);
+        }
+
+        restauranteContainer = new GameObject(containerName);
+        restauranteContainer.transform.position = Vector3.zero;
+        
+        GameObject container = restauranteContainer;
 
         // 1. Cámara y Luz
         if (Camera.main == null)
