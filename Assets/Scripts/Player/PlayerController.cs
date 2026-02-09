@@ -46,15 +46,80 @@ public class PlayerController : MonoBehaviour
         else TryPickUp();
     }
 
+    [Header("Camera Settings")]
+    public Camera playerCamera;
+    public float lookSensitivity = 0.1f; // Reduced from 0.5f
+
+    private float cameraPitch = 0f;
+    private Vector2 lookInput;
+    private float mouseSensitivityMultiplier = 0.5f; // Extra reducer for raw mouse input
+
+    private void Start()
+    {
+        if (playerCamera != null)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+    }
+
+    public void OnLook(InputValue value)
+    {
+        lookInput = value.Get<Vector2>();
+        // Debug.Log("Look Input: " + lookInput);
+    }
+
+    private void Update()
+    {
+        // Cursor Unlock
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        // First Person Look Rotation
+        if (playerCamera != null)
+        {
+            Vector2 look = lookInput;
+            float currentSensitivity = lookSensitivity;
+
+            // Fallback if Event System isn't sending look events
+            if (look == Vector2.zero && Mouse.current != null)
+            {
+                look = Mouse.current.delta.ReadValue();
+                currentSensitivity *= mouseSensitivityMultiplier; // Reduce for raw mouse pixels
+            }
+
+            // Yaw (Player Body)
+            transform.Rotate(Vector3.up * look.x * currentSensitivity);
+
+            // Pitch (Camera Head)
+            cameraPitch -= look.y * currentSensitivity;
+            cameraPitch = Mathf.Clamp(cameraPitch, -85f, 85f);
+            playerCamera.transform.localRotation = Quaternion.Euler(cameraPitch, 0, 0);
+        }
+    }
+
     private void FixedUpdate()
     {
-        Vector3 moveDir = new Vector3(moveInput.x, 0, moveInput.y).normalized;
+        Vector2 input = moveInput;
+
+        // Fallback if Event System isn't sending move events
+        if (input == Vector2.zero && Keyboard.current != null)
+        {
+            if (Keyboard.current.wKey.isPressed) input.y += 1;
+            if (Keyboard.current.sKey.isPressed) input.y -= 1;
+            if (Keyboard.current.aKey.isPressed) input.x -= 1;
+            if (Keyboard.current.dKey.isPressed) input.x += 1;
+        }
+
+        // First Person Movement: Direction relative to player facing
+        Vector3 moveDir = transform.right * input.x + transform.forward * input.y;
+        
         if (moveDir.magnitude > 0.1f)
         {
-            Quaternion targetRot = Quaternion.LookRotation(moveDir);
-            rb.rotation = Quaternion.Slerp(rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime);
-            
-            // Unity 6 uses linearVelocity, but we can check if it exists or use movePosition
+            // Move position directly
             rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
         }
         else

@@ -229,7 +229,7 @@ public class KitchenBootstrap : MonoBehaviour
         CreateWall("Muro_Frontal_L", new Vector3(-18, 4, -50), new Vector3(28, 8, 1), container.transform);
         CreateWall("Muro_Frontal_R", new Vector3(18, 4, -50), new Vector3(28, 8, 1), container.transform);
         CreateWall("Muro_Frontal_Top", new Vector3(0, 6.5f, -50), new Vector3(8, 3, 1), container.transform);
-        CreateDoor("Puerta_Principal", new Vector3(0, 2.5f, -50.1f), new Vector3(8.5f, 5, 0.25f), new Color(0.4f, 0.2f, 0.1f), container.transform);
+        // CreateDoor("Puerta_Principal", new Vector3(0, 2.5f, -50.1f), new Vector3(8.5f, 5, 0.25f), new Color(0.4f, 0.2f, 0.1f), container.transform);
 
         // MUROS LATERALES CON VENTANALES PANORÁMICOS
         float[] sideX = { -32f, 32f };
@@ -273,7 +273,7 @@ public class KitchenBootstrap : MonoBehaviour
         CreateWall("Baño_Wall_FRON_Top", new Vector3(-23.5f, 6.5f, 25), new Vector3(6.5f, 3, 0.5f), bathroom.transform, new Color(0.9f, 0.9f, 0.9f));
         
         // Puerta del Baño (Sellado total con Z=25.02 y ancho extra)
-        CreateDoor("Puerta_Entrada_Baño", new Vector3(-23.5f, 2.5f, 25.02f), new Vector3(5.8f, 5, 0.2f), new Color(0.4f, 0.2f, 0f), bathroom.transform);
+        // CreateDoor("Puerta_Entrada_Baño", new Vector3(-23.5f, 2.5f, 25.02f), new Vector3(5.8f, 5, 0.2f), new Color(0.4f, 0.2f, 0f), bathroom.transform);
 
         // Mobiliario Baño
         // Mueble Lavabo (Vanity)
@@ -304,7 +304,7 @@ public class KitchenBootstrap : MonoBehaviour
         CreateWall("Cocina_Wall_FRON_Top", new Vector3(17, 6.5f, 25), new Vector3(5.5f, 3, 0.6f), kitchen.transform, new Color(0.9f, 0.9f, 0.9f));
         
         // Puerta de la Cocina (Z muy pegada al muro para evitar fugas de luz)
-        CreateDoor("Puerta_Modern_Cocina", new Vector3(17, 2.5f, 25.02f), new Vector3(5.2f, 5, 0.15f), new Color(0.4f, 0.25f, 0.1f), kitchen.transform);
+        // CreateDoor("Puerta_Modern_Cocina", new Vector3(17, 2.5f, 25.02f), new Vector3(5.2f, 5, 0.15f), new Color(0.4f, 0.25f, 0.1f), kitchen.transform);
 
         // Decoración Azulejos (Centrados y contenidos)
         for(int tx=3; tx<28; tx+=4) {
@@ -433,7 +433,32 @@ public class KitchenBootstrap : MonoBehaviour
         Vector3[] cPos = { new Vector3(10, 0.1f, 32), new Vector3(20, 0.1f, 32), new Vector3(15, 0.1f, 42) };
         for (int i = 0; i < 3; i++) {
             GameObject c = CreatePerson("Cocinero_" + i, cPos[i], Color.white, null);
-            c.AddComponent<PlayerController>(); c.AddComponent<PlayerInput>();
+            PlayerController pc = c.AddComponent<PlayerController>();
+            PlayerInput pi = c.AddComponent<PlayerInput>();
+
+            if (i == 1) // Cocinero DOs (Index 1) - Setup First Person
+            {
+                // Create FP Camera
+                GameObject camObj = new GameObject("FP_Camera");
+                camObj.transform.SetParent(c.transform);
+                camObj.transform.localPosition = new Vector3(0, 1.7f, 0.2f); // Head height
+                Camera cam = camObj.AddComponent<Camera>();
+                cam.nearClipPlane = 0.1f;
+                cam.tag = "MainCamera";
+
+                // Assign to Controller
+                pc.playerCamera = cam;
+
+                // Disable Static Camera
+                GameObject staticCam = GameObject.Find("Main Camera");
+                if (staticCam != null) staticCam.SetActive(false);
+            }
+            else
+            {
+                // Disable controls for others
+                pi.enabled = false;
+                pc.enabled = false;
+            }
         }
         GameObject staff = CreatePerson("Staff_Senior", new Vector3(0, 0.1f, -2), new Color(0.2f, 0.4f, 0.7f), null);
         staff.transform.rotation = Quaternion.Euler(0, 180, 0);
