@@ -11,6 +11,26 @@ public class KitchenBootstrap : MonoBehaviour
 {
     private GameObject menuCanvas;
     private GameObject currentMenuPanel;
+    public GameObject restauranteContainer; 
+
+    // --- AUTO-EJECT (Asegura que el script corra sí o sí) ---
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void AutoStartGlobal()
+    {
+        if (FindObjectOfType<KitchenBootstrap>() == null)
+        {
+            GameObject obj = new GameObject("--- GAME MANAGER (AUTO) ---");
+            obj.AddComponent<KitchenBootstrap>();
+            DontDestroyOnLoad(obj);
+        }
+    }
+
+    // --- VARIABLES DE JUEGO (Añadidas para corregir errores) ---
+    private GameObject gamePanel;
+    private int roundsSurvived;
+    private int totalScore;
+    private int consecutiveMediums;
+    private List<Scenario> scenarios;
 
     private void Start()
     {
@@ -43,23 +63,125 @@ public class KitchenBootstrap : MonoBehaviour
         }
     }
 
-    // --- SECUENCIA DE INICIO ---
+    // --- INICIALIZACIÓN DE ESCENARIOS ---
+    void InitializeScenarios()
+    {
+        scenarios = new List<Scenario>();
+
+        // Caso 1: ACIDEZ
+        scenarios.Add(new Scenario {
+            clientName = "Cliente con Acidez",
+            conditionDescription = "Tengo un ardor de estómago terrible... necesito algo que no me haga daño.",
+            // Correcto 100: Avena/Pollo suave
+            optionA_Text = "Pechuga de Pollo Hervida y Manzana", 
+            optionA_Image = "Food/ChickenApple", 
+            optionA_Score = 100,
+            // Normal 50: Pan
+            optionB_Text = "Pan Tostado", 
+            optionB_Image = "Food/Toast", 
+            optionB_Score = 50,
+            // Mal 0: Picante/Grasa
+            optionC_Text = "Tacos Picantes con Salsa", 
+            optionC_Image = "Food/SpicyTacos", 
+            optionC_Score = 0
+        });
+
+        // Caso 2: MIGRAÑAS
+        scenarios.Add(new Scenario {
+            clientName = "Cliente con Migraña",
+            conditionDescription = "Me estalla la cabeza y me molesta la luz... ¿qué puedo comer?",
+            // Correcto 100: Espinacas/Magnesio
+            optionA_Text = "Ensalada de Espinacas y Salmón", 
+            optionA_Image = "Food/SpinachSalmon", 
+            optionA_Score = 100,
+            // Normal 50: Neutro
+            optionB_Text = "Arroz Blanco", 
+            optionB_Image = "Food/Rice", 
+            optionB_Score = 50,
+            // Mal 0: Queso/Vino (Tiramina)
+            optionC_Text = "Tabla de Quesos Curados y Vino", 
+            optionC_Image = "Food/CheeseWine", 
+            optionC_Score = 0
+        });
+
+        // Caso 3: DEPORTE
+        scenarios.Add(new Scenario {
+            clientName = "Atleta Agotado",
+            conditionDescription = "Acabo de terminar una maratón y mis músculos no responden.",
+            // Correcto 100: Potasio/Carbohidratos/Proteina
+            optionA_Text = "Pasta Integral y Plátano", 
+            optionA_Image = "Food/PastaBanana", 
+            optionA_Score = 100,
+            // Normal 50: Agua (Hidrata pero falta comida)
+            optionB_Text = "Solo Agua Mineral", 
+            optionB_Image = "Food/Water", 
+            optionB_Score = 50,
+            // Mal 0: Grasa mala
+            optionC_Text = "Hamburguesa Doble con Bacon", 
+            optionC_Image = "Food/BurgerBacon", 
+            optionC_Score = 0
+        });
+    }
+
+    // --- SECUENCIA DE INICIO PROFESIONAL ---
     IEnumerator SecuenciaInicio()
     {
         CrearCanvas();
 
-        // PANTALLA DE CARGA
-        GameObject panelCarga = CrearPanel(Color.black);
-        CrearTexto(panelCarga.transform, "CARGANDO...", 0, 50, 50, Color.white);
+        // 1. Fondo Elegante (Dark Charcoal)
+        GameObject panelCarga = CrearPanel(new Color(0.1f, 0.1f, 0.12f));
         
-        GameObject barra = CrearBarraCarga(panelCarga.transform);
-        Slider slider = barra.GetComponent<Slider>();
-        
+        // 2. Título Flotante
+        GameObject titulo = CrearTexto(panelCarga.transform, "CHEF SIMULATOR", 0, 100, 50, new Color(1f, 0.8f, 0.2f)); // Oro
+        titulo.GetComponent<Text>().fontStyle = FontStyle.Bold;
+
+        // 3. Barra de Carga Minimalista
+        GameObject barraFondo = new GameObject("BarraFondo");
+        barraFondo.transform.SetParent(panelCarga.transform, false);
+        Image imgBarraFondo = barraFondo.AddComponent<Image>();
+        imgBarraFondo.color = new Color(0.2f, 0.2f, 0.2f); // Gris oscuro
+        RectTransform rtBarra = barraFondo.GetComponent<RectTransform>();
+        rtBarra.sizeDelta = new Vector2(600, 6); // Muy fina y moderna
+        rtBarra.anchoredPosition = new Vector2(0, -50);
+
+        GameObject barraRelleno = new GameObject("BarraRelleno");
+        barraRelleno.transform.SetParent(barraFondo.transform, false);
+        Image imgRelleno = barraRelleno.AddComponent<Image>();
+        imgRelleno.color = new Color(0.2f, 0.8f, 0.5f); // Verde esmeralda moderno
+        RectTransform rtRelleno = barraRelleno.GetComponent<RectTransform>();
+        rtRelleno.anchorMin = Vector2.zero; rtRelleno.anchorMax = Vector2.zero;
+        rtRelleno.pivot = new Vector2(0, 0.5f);
+        rtRelleno.sizeDelta = new Vector2(0, 6); 
+        rtRelleno.anchoredPosition = Vector2.zero; 
+
+        // 4. Texto dinámico de carga
+        GameObject txtEstado = CrearTexto(panelCarga.transform, "Iniciando sistema...", 0, -80, 18, Color.gray);
+        Text tEstado = txtEstado.GetComponent<Text>();
+        tEstado.fontStyle = FontStyle.Italic;
+
+        string[] tips = { 
+            "Afilando los cuchillos...", 
+            "Comprando ingredientes frescos...", 
+            "Limpiando la estación de trabajo...", 
+            "Precalentando los hornos...",
+            "Revisando recetas..." 
+        };
+
+        float tiempoTotal = 4f;
         float tiempo = 0f;
-        while(tiempo < 2f) // Simular carga
+        
+        while(tiempo < tiempoTotal) 
         {
             tiempo += Time.deltaTime;
-            slider.value = tiempo / 2f;
+            float progreso = tiempo / tiempoTotal;
+            
+            // Animación Barra (Suave)
+            rtRelleno.sizeDelta = new Vector2(600 * progreso, 6);
+
+            // Animación Texto (Cambia cada 0.8s)
+            int tipIndex = (int)((tiempo / tiempoTotal) * tips.Length);
+            if(tipIndex < tips.Length) tEstado.text = tips[tipIndex];
+
             yield return null;
         }
 
@@ -71,23 +193,180 @@ public class KitchenBootstrap : MonoBehaviour
     {
         if (currentMenuPanel != null) Destroy(currentMenuPanel);
 
-        currentMenuPanel = CrearPanel(new Color(0.1f, 0.1f, 0.2f)); // Fondo Azul Oscuro
-        CrearTexto(currentMenuPanel, "COCINA SIMULATOR", 0, 150, 80, Color.yellow);
+        // 1. Fondo Corporativo (Azul noche profundo o Gris oscuro)
+        currentMenuPanel = CrearPanel(new Color(0.1f, 0.12f, 0.15f)); 
+        
+        // 2. HEADER - Título y Subtítulo
+        GameObject headerContainer = new GameObject("Header");
+        headerContainer.transform.SetParent(currentMenuPanel.transform, false);
+        RectTransform rtHeader = headerContainer.AddComponent<RectTransform>();
+        rtHeader.anchorMin = new Vector2(0.5f, 0.7f); rtHeader.anchorMax = new Vector2(0.5f, 0.9f);
+        rtHeader.anchoredPosition = Vector2.zero; rtHeader.sizeDelta = new Vector2(800, 200);
 
-        // Botones
-        CrearBoton(currentMenuPanel, "INICIAR JUEGO", 0, 30, Color.green, () => {
-            Destroy(menuCanvas); // Adios menú
-            GenerarRestaurante(); // HOLA JUEGO
+        // Título Central
+        GameObject titleT = CrearTexto(headerContainer.transform, "CHEF PROFESSIONAL", 0, 40, 70, new Color(1f, 0.85f, 0.3f)); // Dorado suave
+        titleT.GetComponent<Text>().fontStyle = FontStyle.Bold;
+
+        // Subtítulo
+        CrearTexto(headerContainer.transform, "GESTIÓN GASTRONÓMICA AVANZADA", 0, -30, 20, new Color(0.7f, 0.75f, 0.8f));
+
+        // 3. CENTER - Botones
+        GameObject buttonContainer = new GameObject("ButtonContainer");
+        buttonContainer.transform.SetParent(currentMenuPanel.transform, false);
+        RectTransform rtContainer = buttonContainer.AddComponent<RectTransform>();
+        // Anclar al centro de la pantalla
+        rtContainer.anchorMin = new Vector2(0.5f, 0.5f); 
+        rtContainer.anchorMax = new Vector2(0.5f, 0.5f);
+        rtContainer.anchoredPosition = new Vector2(0, -50); 
+        rtContainer.sizeDelta = new Vector2(500, 400);
+
+        // --- OPCIÓN 1: INICIO DE JUEGO ---
+        CrearBotonModerno(buttonContainer.transform, "INICIO DE JUEGO", 0, 100, new Color(0.2f, 0.6f, 0.3f), () => {
+            Destroy(menuCanvas); 
+            ShowRound(); 
         });
 
-        CrearBoton(currentMenuPanel, "TUTORIAL", 0, -50, Color.cyan, mostrarTutorial);
+        // --- OPCIÓN 2: MANUAL DE INSTRUCCIONES ---
+        CrearBotonModerno(buttonContainer.transform, "MANUAL DE INSTRUCCIONES", 0, 0, new Color(0.2f, 0.4f, 0.6f), MostrarInstrucciones);
 
-        CrearBoton(currentMenuPanel, "SALIR", 0, -130, Color.red, () => {
-             Application.Quit();
-             #if UNITY_EDITOR
-             UnityEditor.EditorApplication.isPlaying = false;
-             #endif
+        // --- OPCIÓN 3: CREAR USUARIO ---
+        CrearBotonModerno(buttonContainer.transform, "CREAR USUARIO", 0, -100, new Color(0.5f, 0.3f, 0.6f), MostrarCrearUsuario);
+        
+        // Footer
+        GameObject footer = CrearTexto(currentMenuPanel.transform, "© 2026 Enterprise Solutions", 0, -300, 12, Color.gray);
+        RectTransform rtFooter = footer.GetComponent<RectTransform>();
+        rtFooter.anchorMin = new Vector2(0.5f, 0.05f); rtFooter.anchorMax = new Vector2(0.5f, 0.05f);
+        rtFooter.anchoredPosition = Vector2.zero;
+    }
+
+    void MostrarInstrucciones()
+    {
+        if (currentMenuPanel != null) Destroy(currentMenuPanel);
+        currentMenuPanel = CrearPanel(new Color(0.15f, 0.2f, 0.25f)); // Azul acero
+
+        CrearTexto(currentMenuPanel.transform, "MANUAL OPERATIVO", 0, 200, 50, Color.white);
+
+        string manual = 
+            "- PROTOCOLO DE ACIDEZ: Servir alimentos alcalinos (Pollo, Avena).\n\n" +
+            "- PROTOCOLO DE MIGRAÑA: Evitar tiramina. Priorizar Espinacas/Magnesio.\n\n" +
+            "- PROTOCOLO DEPORTIVO: Requerimiento de Potasio y Carbohidratos (Plátano, Pasta).\n\n" +
+            "OBJETIVO: Maximizar satisfacción del cliente (100 pts) para evitar sanciones.";
+
+        GameObject txt = CrearTexto(currentMenuPanel.transform, manual, 0, 0, 24, new Color(0.9f, 0.9f, 0.9f));
+        txt.GetComponent<RectTransform>().sizeDelta = new Vector2(900, 400); // Dar espacio para leer
+
+        CrearBotonModerno(currentMenuPanel.transform, "VOLVER AL MENÚ", 0, -200, new Color(0.6f, 0.2f, 0.2f), MostrarMenuPrincipal);
+    }
+
+    void MostrarCrearUsuario()
+    {
+        if (currentMenuPanel != null) Destroy(currentMenuPanel);
+        currentMenuPanel = CrearPanel(new Color(0.2f, 0.15f, 0.25f)); // Púrpura oscuro corporativo
+
+        // Header
+        GameObject header = CrearTexto(currentMenuPanel.transform, "REGISTRO DE PERSONAL", 0, 150, 50, Color.white);
+        header.GetComponent<Text>().fontStyle = FontStyle.Bold;
+        
+        CrearTexto(currentMenuPanel.transform, "Identificación del Chef Ejecutivo", 0, 100, 20, new Color(0.8f, 0.8f, 0.8f));
+
+        // -- INPUT FIELD CONTAINER --
+        GameObject inputObj = new GameObject("InputField_Name");
+        inputObj.transform.SetParent(currentMenuPanel.transform, false);
+        
+        // Background Image for Input
+        Image img = inputObj.AddComponent<Image>();
+        img.color = new Color(1f, 1f, 1f, 0.1f); // Blanco semitransparente moderno
+        
+        // RECT TRANSFORM (Ya existe por el Image, lo recuperamos)
+        RectTransform rtInput = inputObj.GetComponent<RectTransform>();
+        rtInput.sizeDelta = new Vector2(500, 60);
+        rtInput.anchoredPosition = new Vector2(0, 20);
+
+        // InputField Component (Funcional)
+        InputField inputField = inputObj.AddComponent<InputField>();
+        
+        // 1. Child Text Component (Lo que escribe el usuario)
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(inputObj.transform, false);
+        Text textComp = textObj.AddComponent<Text>();
+        textComp.font = GetMyFont();
+        textComp.fontSize = 28;
+        textComp.color = Color.white;
+        textComp.alignment = TextAnchor.MiddleCenter;
+        RectTransform rtText = textObj.GetComponent<RectTransform>();
+        rtText.anchorMin = Vector2.zero; rtText.anchorMax = Vector2.one;
+        rtText.sizeDelta = new Vector2(-20, 0); // Padding lateral
+        rtText.offsetMin = new Vector2(10, 0); rtText.offsetMax = new Vector2(-10, 0);
+        
+        // 2. Child Placeholder Component (Texto fantasma)
+        GameObject placeHolderObj = new GameObject("Placeholder");
+        placeHolderObj.transform.SetParent(inputObj.transform, false);
+        Text placeComp = placeHolderObj.AddComponent<Text>();
+        placeComp.text = "Escriba su nombre...";
+        placeComp.font = GetMyFont();
+        placeComp.fontSize = 28;
+        placeComp.fontStyle = FontStyle.Italic;
+        placeComp.color = new Color(1f, 1f, 1f, 0.5f);
+        placeComp.alignment = TextAnchor.MiddleCenter;
+        RectTransform rtPlace = placeHolderObj.GetComponent<RectTransform>();
+        rtPlace.anchorMin = Vector2.zero; rtPlace.anchorMax = Vector2.one;
+        rtPlace.sizeDelta = new Vector2(-20, 0);
+        rtPlace.offsetMin = new Vector2(10, 0); rtPlace.offsetMax = new Vector2(-10, 0);
+
+        // Conectar todo al InputField
+        inputField.textComponent = textComp;
+        inputField.placeholder = placeComp;
+        inputField.image = img;
+        
+        // Buttons
+        CrearBotonModerno(currentMenuPanel.transform, "CONFIRMAR REGISTRO", 0, -80, new Color(0.2f, 0.6f, 0.3f), () => {
+             Debug.Log($"Usuario registrado: {inputField.text}");
+             // Aquí podrías guardar el nombre en una variable estática si quisieras
+             MostrarMenuPrincipal(); 
         });
+
+        CrearBotonModerno(currentMenuPanel.transform, "ATRAS", 0, -160, new Color(0.6f, 0.2f, 0.2f), MostrarMenuPrincipal);
+    }
+
+    void CrearBotonModerno(Transform parent, string texto, float x, float y, Color colorBase, UnityEngine.Events.UnityAction accion)
+    {
+        GameObject b = new GameObject($"Btn_{texto}");
+        b.transform.SetParent(parent, false);
+        
+        // Sombra del botón
+        GameObject shadow = new GameObject("Shadow");
+        shadow.transform.SetParent(b.transform, false);
+        Image imgS = shadow.AddComponent<Image>();
+        imgS.color = new Color(0,0,0,0.4f);
+        RectTransform rs = shadow.GetComponent<RectTransform>();
+        rs.anchorMin = Vector2.zero; rs.anchorMax = Vector2.one;
+        rs.offsetMin = new Vector2(4, -4); rs.offsetMax = new Vector2(4, -4);
+
+        // Fondo Botón
+        Image img = b.AddComponent<Image>(); 
+        img.color = colorBase;
+        
+        Button btn = b.AddComponent<Button>(); 
+        btn.onClick.AddListener(accion);
+        // Transición de color
+        ColorBlock cb = btn.colors;
+        cb.highlightedColor = Color.Lerp(colorBase, Color.white, 0.2f);
+        cb.pressedColor = Color.Lerp(colorBase, Color.black, 0.2f);
+        btn.colors = cb;
+        
+        RectTransform r = b.GetComponent<RectTransform>();
+        r.sizeDelta = new Vector2(450, 70);
+        r.anchoredPosition = new Vector2(x, y);
+
+        // Texto Boton Estilizado
+        GameObject t = CrearTexto(b.transform, texto, 0, 0, 24, Color.white, true);
+        t.GetComponent<Text>().fontStyle = FontStyle.Bold;
+        t.GetComponent<RectTransform>().offsetMin = new Vector2(0,0);
+        t.GetComponent<RectTransform>().offsetMax = new Vector2(0,0);
+        
+        // CrearTexto pone anchor al centro por defecto si stretch=true, ajustamos
+        Text txtComp = t.GetComponent<Text>();
+        txtComp.alignment = TextAnchor.MiddleCenter;
     }
 
     void CrearBotonMenu(Transform parent, string texto, float x, float y, Color colorFondo, Vector2 size, UnityEngine.Events.UnityAction accion)
@@ -166,7 +445,9 @@ public class KitchenBootstrap : MonoBehaviour
         GameObject old = GameObject.Find(containerName);
         if (old != null) Destroy(old);
 
-        GameObject container = new GameObject(containerName);
+        // Assign to the public field so the Editor script can see it
+        restauranteContainer = new GameObject(containerName);
+        GameObject container = restauranteContainer; // Local reference for existing code compatibility
         container.transform.position = Vector3.zero;
 
         // 1. Cámara y Luz
@@ -424,7 +705,7 @@ public class KitchenBootstrap : MonoBehaviour
         txt.alignment = TextAnchor.MiddleCenter;
         txt.fontSize = tamano; 
         txt.color = color;
-        txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        txt.font = GetMyFont();
         txt.resizeTextForBestFit = true;
         txt.resizeTextMinSize = 10;
         txt.resizeTextMaxSize = tamano;
@@ -492,12 +773,16 @@ public class KitchenBootstrap : MonoBehaviour
     {
         if(gamePanel != null) Destroy(gamePanel);
         // Fondo resultado
-        gamePanel = CrearPanel(score == 100 ? new Color(0.2f, 0.6f, 0.2f) : new Color(0.8f, 0.8f, 0.2f));
+        gamePanel = CrearPanel(score == 100 ? new Color(0.2f, 0.6f, 0.2f) : (score == 50 ? new Color(0.8f, 0.8f, 0.2f) : new Color(0.8f, 0.2f, 0.2f)));
 
-        string msg = score == 100 ? "¡EXCELENTE! (+100)" : "REGULAR (+50)";
+        string msg = "";
+        if (score == 100) msg = "¡HAS ESCOGIDO BIEN! (+100)";
+        else if (score == 50) msg = "REGULAR (+50)";
+        else msg = "ELECCIÓN INCORRECTA (+0)";
+
         CrearTexto(gamePanel.transform, msg, 0, 50, 60, Color.white);
         
-        CrearBoton(gamePanel.transform, "SIGUIENTE >>", 0, -100, Color.white, ShowRound);
+        CrearBoton(gamePanel.transform, "SIGUIENTE PLATO >>", 0, -100, Color.white, ShowRound);
     }
 
     void ShowGameOver(string reason)
@@ -526,7 +811,20 @@ public class KitchenBootstrap : MonoBehaviour
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
             menuCanvas.AddComponent<GraphicRaycaster>();
+            
+            // Asegurar que se ve encima de todo
+            c.sortingOrder = 999;
         }
+    }
+
+    // Helper para fuente robusta
+    Font GetMyFont()
+    {
+         // INTENTO 1: LegacyRuntime.ttf (Standard Unity)
+         Font f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+         // INTENTO 2: Arial del SO si falla
+         if (f == null) f = Font.CreateDynamicFontFromOSFont("Arial", 16);
+         return f;
     }
 
     GameObject CrearPanel(Color c, Sprite sprite = null)
@@ -568,7 +866,7 @@ public class KitchenBootstrap : MonoBehaviour
         txt.alignment = TextAnchor.MiddleCenter;
         txt.fontSize = 20; 
         txt.color = Color.black; 
-        txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        txt.font = GetMyFont();
         
         RectTransform tr = t.GetComponent<RectTransform>(); 
         tr.anchorMin = Vector2.zero; tr.anchorMax = Vector2.one; tr.sizeDelta = Vector2.zero;
@@ -603,5 +901,53 @@ public class KitchenBootstrap : MonoBehaviour
         tex.SetPixels(cols);
         tex.Apply();
         return Sprite.Create(tex, new Rect(0,0,64,64), new Vector2(0.5f, 0.5f));
+    }
+
+    // --- BUILD METHODS (Missing Helpers) ---
+    void CreateWall(string name, Vector3 pos, Vector3 scale, Transform parent)
+    {
+        GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wall.name = name;
+        wall.transform.SetParent(parent);
+        wall.transform.position = pos;
+        wall.transform.localScale = scale;
+    }
+
+    void CreateGlassWindow(string name, Vector3 pos, Vector3 scale, Transform parent)
+    {
+        GameObject win = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        win.name = name;
+        win.transform.SetParent(parent);
+        win.transform.position = pos;
+        win.transform.localScale = scale;
+        
+        Renderer r = win.GetComponent<Renderer>();
+        // Configurar material transparente
+        r.material = new Material(Shader.Find("Standard")); 
+        r.material.color = new Color(0.7f, 0.9f, 1f, 0.3f); 
+        r.material.SetFloat("_Mode", 3); // Transparent
+        r.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        r.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        r.material.SetInt("_ZWrite", 0);
+        r.material.DisableKeyword("_ALPHATEST_ON");
+        r.material.EnableKeyword("_ALPHABLEND_ON");
+        r.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        r.material.renderQueue = 3000;
+    }
+
+    [System.Serializable]
+    public class Scenario
+    {
+        public string clientName;
+        public string conditionDescription;
+        public string optionA_Text;
+        public string optionA_Image;
+        public int optionA_Score;
+        public string optionB_Text;
+        public string optionB_Image;
+        public int optionB_Score;
+        public string optionC_Text;
+        public string optionC_Image;
+        public int optionC_Score;
     }
 }
