@@ -12,18 +12,34 @@ public class CustomerNPC : MonoBehaviour, IInteractable
         trigger.radius = 2.0f; // Radio de detección de cercanía
     }
 
-    // Opción 1: Interacción explícita (Tecla E/Espacio)
+    // Opción 1: Interacción explícita (Tecla E/Espacio o Click)
     public void Interact(PlayerController player)
     {
         TalkToCustomer();
     }
 
-    // Opción 2: Interacción por cercanía (lo que pidió el usuario "cuando se acerque")
+    // Opción 2: Mostrar Botón/Prompt cuando está cerca
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") || other.GetComponent<PlayerController>() != null)
         {
-            TalkToCustomer();
+            if (KitchenBootstrap.Instance != null)
+            {
+                // Muestra el botón arriba a la izquierda
+                KitchenBootstrap.Instance.ToggleInteractionPrompt(true, () => TalkToCustomer());
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player") || other.GetComponent<PlayerController>() != null)
+        {
+            if (KitchenBootstrap.Instance != null)
+            {
+                // Oculta el botón
+                KitchenBootstrap.Instance.ToggleInteractionPrompt(false);
+            }
         }
     }
 
@@ -35,9 +51,12 @@ public class CustomerNPC : MonoBehaviour, IInteractable
         if (Time.time - lastInteractionTime < COOLDOWN) return;
         lastInteractionTime = Time.time;
 
-        Debug.Log("Cliente contactado.");
+        Debug.Log("Iniciando conversación con cliente...");
+        
+        // Ocultar el prompt al iniciar la charla
         if (KitchenBootstrap.Instance != null)
         {
+            KitchenBootstrap.Instance.ToggleInteractionPrompt(false);
             KitchenBootstrap.Instance.ShowRound();
         }
     }

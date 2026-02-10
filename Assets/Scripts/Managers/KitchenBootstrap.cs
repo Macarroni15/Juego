@@ -76,57 +76,111 @@ public class KitchenBootstrap : MonoBehaviour
     {
         scenarios = new List<Scenario>();
 
-        // Caso 1: ACIDEZ
+        // Caso 1: ACIDEZ (Refinado)
         scenarios.Add(new Scenario {
-            clientName = "Cliente con Acidez",
-            conditionDescription = "Tengo un ardor de estómago terrible... necesito algo que no me haga daño.",
-            // Correcto 100: Avena/Pollo suave
-            optionA_Text = "Pechuga de Pollo Hervida y Manzana", 
-            optionA_Image = "Food/ChickenApple", 
+            clientName = "Crítico Gastronómico con Reflujo",
+            conditionDescription = "Esta semana he abusado de las catas de vino y cítricos. Mi esófago es un infierno. Necesito algo elegante pero que calme el fuego.",
+            // Correcto 100: Alcalino y suave
+            optionA_Text = "Velouté de Calabaza con Pollo Asado a Baja Temperatura", 
+            optionA_Image = "Food/PumpkinSoup", 
             optionA_Score = 100,
-            // Normal 50: Pan
-            optionB_Text = "Pan Tostado", 
-            optionB_Image = "Food/Toast", 
+            // Normal 50: Pan (ok pero seco)
+            optionB_Text = "Tostadas de Masa Madre con Aceite de Oliva", 
+            optionB_Image = "Food/ToastLuxury", 
             optionB_Score = 50,
-            // Mal 0: Picante/Grasa
-            optionC_Text = "Tacos Picantes con Salsa", 
-            optionC_Image = "Food/SpicyTacos", 
+            // Mal 0: Ácido/Grasa/Picante
+            optionC_Text = "Ceviche Peruano con Leche de Tigre Picante", 
+            optionC_Image = "Food/Ceviche", 
             optionC_Score = 0
         });
 
-        // Caso 2: MIGRAÑAS
+        // Caso 2: MIGRAÑAS (Refinado)
         scenarios.Add(new Scenario {
-            clientName = "Cliente con Migraña",
-            conditionDescription = "Me estalla la cabeza y me molesta la luz... ¿qué puedo comer?",
-            // Correcto 100: Espinacas/Magnesio
-            optionA_Text = "Ensalada de Espinacas y Salmón", 
-            optionA_Image = "Food/SpinachSalmon", 
+            clientName = "Empresaria con Cefalea",
+            conditionDescription = "Llevo horas frente a la pantalla y la luz me mata. Siento que me va a estallar la cabeza. Evita cualquier cosa 'añeja' o excitante.",
+            // Correcto 100: Rico en Magnesio/B2
+            optionA_Text = "Salmón Noruego al Vapor con Espárragos Trigueros y Quinoa", 
+            optionA_Image = "Food/SalmonAsparagus", 
             optionA_Score = 100,
             // Normal 50: Neutro
-            optionB_Text = "Arroz Blanco", 
-            optionB_Image = "Food/Rice", 
+            optionB_Text = "Puré de Patatas Trufado", 
+            optionB_Image = "Food/MashedPotatoes", 
             optionB_Score = 50,
-            // Mal 0: Queso/Vino (Tiramina)
-            optionC_Text = "Tabla de Quesos Curados y Vino", 
-            optionC_Image = "Food/CheeseWine", 
+            // Mal 0: Tiramina (Queso/Vino)
+            optionC_Text = "Tabla de Quesos Azules y Tinto Reserva", 
+            optionC_Image = "Food/BlueCheese", 
             optionC_Score = 0
         });
 
-        // Caso 3: DEPORTE
+        // Caso 3: ATLETA (Refinado)
         scenarios.Add(new Scenario {
-            clientName = "Atleta Agotado",
-            conditionDescription = "Acabo de terminar una maratón y mis músculos no responden.",
-            // Correcto 100: Potasio/Carbohidratos/Proteina
-            optionA_Text = "Pasta Integral y Plátano", 
-            optionA_Image = "Food/PastaBanana", 
+            clientName = "Ciclista de Élite",
+            conditionDescription = "Mañana tengo la etapa reina del Tour. Mis depósitos de glucógeno están vacíos y necesito recuperación muscular inmediata.",
+            // Correcto 100: Carbohidrato complejo + Proteina magra
+            optionA_Text = "Pasta Fresca al Pesto con Pechuga de Pavo y Nueces", 
+            optionA_Image = "Food/PestoPasta", 
             optionA_Score = 100,
-            // Normal 50: Agua (Hidrata pero falta comida)
-            optionB_Text = "Solo Agua Mineral", 
-            optionB_Image = "Food/Water", 
+            // Normal 50: Solo Hidratación
+            optionB_Text = "Batido Isotónico de Recuperación Premium", 
+            optionB_Image = "Food/IsotonicDrink", 
             optionB_Score = 50,
-            // Mal 0: Grasa mala
-            optionC_Text = "Hamburguesa Doble con Bacon", 
-            optionC_Image = "Food/BurgerBacon", 
+            // Mal 0: Grasa pesada (digestión lenta)
+            optionC_Text = "Pizza 4 Quesos con Borde Relleno", 
+            optionC_Image = "Food/Pizza4Cheese", 
+            optionC_Score = 0
+        });
+
+        // Caso 4: CELIAQUÍA (Nuevo)
+        scenarios.Add(new Scenario {
+            clientName = "Joven Celíaca",
+            conditionDescription = "Tengo intolerancia severa al gluten. Incluso una traza mínima me manda al hospital. Sorpréndeme, pero no me mates.",
+            // Correcto 100: Gluten Free natural
+            optionA_Text = "Risotto de Setas Silvestres con Parmesano Reggiano", 
+            optionA_Image = "Food/MushroomRisotto", 
+            optionA_Score = 100,
+            // Normal 50: Sin gluten pero arriesgado (Contaminacion cruzada en fritos)
+            optionB_Text = "Patatas Fritas en Aceite Común", 
+            optionB_Image = "Food/Fries", 
+            optionB_Score = 50,
+            // Mal 0: Trigo directo
+            optionC_Text = "Raviolis Artesanos de Trigo Duro", 
+            optionC_Image = "Food/Ravioli", 
+            optionC_Score = 0
+        });
+
+        // Caso 5: DIABÉTICO (Nuevo)
+        scenarios.Add(new Scenario {
+            clientName = "Señor con Diabetes Tipo 2",
+            conditionDescription = "Mi médico me ha dicho que controle mis picos de insulina. Tengo mucha hambre, pero no quiero azúcares rápidos.",
+            // Correcto 100: Bajo Índice Glucémico, Alta Fibra
+            optionA_Text = "Lentejas Estofadas con Verduras de Temporada", 
+            optionA_Image = "Food/LentilStew", 
+            optionA_Score = 100,
+            // Normal 50:
+            optionB_Text = "Filete de Ternera a la Plancha (Sin guarnición)", 
+            optionB_Image = "Food/Steak", 
+            optionB_Score = 50,
+            // Mal 0: Bomba de azúcar
+            optionC_Text = "Pastel de Chocolate con Glaseado de Azúcar", 
+            optionC_Image = "Food/ChocoCake", 
+            optionC_Score = 0
+        });
+
+        // Caso 6: HIPERTENSIÓN (Nuevo)
+        scenarios.Add(new Scenario {
+            clientName = "Ejecutivo Hipertenso",
+            conditionDescription = "Tengo la tensión por las nubes por el estrés. Necesito comer bien, pero el cardiólogo me ha prohibido la sal.",
+            // Correcto 100: Dieta DASH, Especias en vez de sal
+            optionA_Text = "Pollo al Limón con Romero y Ensalada de Tomate", 
+            optionA_Image = "Food/LemonChicken", 
+            optionA_Score = 100,
+            // Normal 50: Poca sal pero procesado
+            optionB_Text = "Sandwich de Pavo y Queso Light", 
+            optionB_Image = "Food/Sandwich", 
+            optionB_Score = 50,
+            // Mal 0: Sodio puro
+            optionC_Text = "Sopa de Sobre Instantánea y Embutidos", 
+            optionC_Image = "Food/InstaSoup", 
             optionC_Score = 0
         });
     }
@@ -459,7 +513,46 @@ public class KitchenBootstrap : MonoBehaviour
         SpawnPlayerTopDown(new Vector3(0, 0.1f, -4));
         
         // 6. DETALLE: CLIENTE QUIETO (Lo que pidió el usuario)
-        SpawnCustomerNPC(new Vector3(4, 0.1f, -2)); // Colocado a un lado
+        SpawnCustomerNPC(new Vector3(0, 0.1f, 2.8f)); // Detrás de la barra (Isla en 0, player en -4)
+    }
+
+    // --- UI INTERACTION PROMPT ---
+    private GameObject interactionButton;
+
+    public void ToggleInteractionPrompt(bool show, UnityEngine.Events.UnityAction action = null)
+    {
+        if (interactionButton == null)
+        {
+            // Crear el botón si no existe (Arriba a la Izquierda)
+            CrearCanvas(); // Asegurar canvas
+            interactionButton = new GameObject("Btn_TalkCustomer");
+            interactionButton.transform.SetParent(menuCanvas.transform, false);
+            
+            Image img = interactionButton.AddComponent<Image>();
+            img.color = new Color(0, 0, 0, 0.8f); // Fondo negro semitransparente
+
+            Button btn = interactionButton.AddComponent<Button>();
+            
+            // Texto
+            GameObject t = CrearTexto(interactionButton.transform, "HABLAR CON CLIENTE (E)", 0, 0, 24, Color.white, true);
+            t.GetComponent<Text>().fontStyle = FontStyle.Bold;
+
+            RectTransform rt = interactionButton.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 1); 
+            rt.anchorMax = new Vector2(0, 1);
+            rt.pivot = new Vector2(0, 1);
+            rt.anchoredPosition = new Vector2(20, -20); // Margen superior izquierdo
+            rt.sizeDelta = new Vector2(300, 60);
+        }
+
+        interactionButton.SetActive(show);
+        
+        if (show && action != null)
+        {
+            Button btn = interactionButton.GetComponent<Button>();
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(action);
+        }
     }
 
     void SpawnCustomerNPC(Vector3 pos)
@@ -1526,6 +1619,34 @@ public class KitchenBootstrap : MonoBehaviour
         CrearCartaOpcion(optionsArea.transform, 1, "B", current.optionB_Text, current.optionB_Image, () => CheckAnswer(current.optionB_Score));
         // Opcion C
         CrearCartaOpcion(optionsArea.transform, 2, "C", current.optionC_Text, current.optionC_Image, () => CheckAnswer(current.optionC_Score));
+
+        // --- BOTÓN SALIR (X) ---
+        // Botón pequeño en la esquina superior derecha para cerrar la pregunta
+        GameObject closeBtnObj = new GameObject("Btn_Close");
+        closeBtnObj.transform.SetParent(gamePanel.transform, false);
+        Image closeImg = closeBtnObj.AddComponent<Image>();
+        closeImg.color = new Color(0.8f, 0.2f, 0.2f); // Rojo
+        
+        Button closeBtn = closeBtnObj.AddComponent<Button>();
+        closeBtn.onClick.AddListener(() => {
+            if(gamePanel != null) Destroy(gamePanel);
+            // Volver a mostrar el prompt de interacción si se acerca de nuevo
+            StartCoroutine(ReenablePromptDelayed());
+        });
+
+        RectTransform closeRect = closeBtnObj.GetComponent<RectTransform>();
+        closeRect.anchorMin = new Vector2(0.95f, 0.92f);
+        closeRect.anchorMax = new Vector2(0.99f, 0.98f);
+        closeRect.offsetMin = Vector2.zero; closeRect.offsetMax = Vector2.zero;
+
+        CrearTexto(closeBtnObj.transform, "X", 0, 0, 20, Color.white, true);
+    }
+
+    IEnumerator ReenablePromptDelayed()
+    {
+        yield return new WaitForSeconds(1f);
+        // Si el jugador sigue cerca (trigger exit no saltó), mostrar prompt de nuevo?
+        // En realidad, OnTriggerEnter/Exit lo manejan. Al cerrar panel, simplemente volvemos al juego.
     }
 
     void CrearCartaOpcion(Transform parent, int index, string letter, string text, string imageName, UnityEngine.Events.UnityAction action)
