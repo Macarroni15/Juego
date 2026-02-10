@@ -96,7 +96,10 @@ public class GameLauncher : MonoBehaviour
         canvasObj = new GameObject("CanvasMenu");
         Canvas c = canvasObj.AddComponent<Canvas>();
         c.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObj.AddComponent<CanvasScaler>(); // Para que se adapte
+        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>(); // Para que se adapte
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920, 1080);
+        scaler.matchWidthOrHeight = 0.5f;
         canvasObj.AddComponent<GraphicRaycaster>();
 
         // FUENTE (Intento robusto de conseguir Arial)
@@ -141,7 +144,11 @@ public class GameLauncher : MonoBehaviour
 
 
         // --- 2. PANEL MENU PRINCIPAL ---
-        panelMenu = CrearPanel("PanelMenu", new Color(0.1f, 0.1f, 0.2f));
+        Sprite bgMenu = Resources.Load<Sprite>("Images/fondo_cocina");
+        Color colorMenu = (bgMenu != null) ? Color.white : new Color(0.1f, 0.1f, 0.2f);
+        panelMenu = CrearPanel("PanelMenu", colorMenu);
+        if (bgMenu != null) panelMenu.GetComponent<Image>().sprite = bgMenu;
+        panelMenu.name = "Background"; // Match requested hierarchy name
         CrearTexto(panelMenu.transform, "TituloJuego", "JUEGO DE COCINA", 0, 200, 80, Color.yellow, fuente);
 
         CrearBoton(panelMenu.transform, "BtnJugar", "INICIAR JUEGO", 0, 20, Color.green, fuente, OnClick_Iniciar);
