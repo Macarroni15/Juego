@@ -16,19 +16,25 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private GameObject heldItem;
 
+    [Header("FPS Settings")]
+    public bool isFirstPerson = false;
+    public Transform cameraTransform;
+    public float mouseSensitivity = 2f;
+    private float verticalRotation = 0f;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         if (rb == null) rb = gameObject.AddComponent<Rigidbody>();
         
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        rb.constraints = RigidbodyConstraints.FreezeRotation; // Freeze all physics rotation
         rb.useGravity = true;
 
         if (holdPoint == null)
         {
             GameObject hp = new GameObject("HoldPoint");
             hp.transform.SetParent(transform);
-            hp.transform.localPosition = new Vector3(0, 0.5f, 0.8f);
+            hp.transform.localPosition = new Vector3(0.5f, -0.4f, 0.8f); // Side hand position
             holdPoint = hp.transform;
         }
     }
@@ -36,7 +42,6 @@ public class PlayerController : MonoBehaviour
     public void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
-        Debug.Log("Move Input: " + moveInput);
     }
 
     public void OnInteract()
@@ -48,66 +53,72 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        // Fallback Input (Direct Keyboard poll)
-        // Useful if PlayerInput component is not set up with an Action Asset
+        // Fallback or Input System polling
+        Vector2 input = Vector2.zero;
         if (Keyboard.current != null)
         {
-            Vector2 keyboardInput = Vector2.zero;
-            if (Keyboard.current.leftArrowKey.isPressed || Keyboard.current.aKey.isPressed) keyboardInput.x = -1;
-            if (Keyboard.current.rightArrowKey.isPressed || Keyboard.current.dKey.isPressed) keyboardInput.x = 1;
-            if (Keyboard.current.upArrowKey.isPressed || Keyboard.current.wKey.isPressed) keyboardInput.y = 1;
-            if (Keyboard.current.downArrowKey.isPressed || Keyboard.current.sKey.isPressed) keyboardInput.y = -1;
+            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) input.y = 1;
+            else if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) input.y = -1;
+            
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) input.x = -1;
+            else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) input.x = 1;
+            
+            // Interaction
+            if (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame) OnInteract();
+        }
+        moveInput = input;
 
-            // Only override if there is input, or if we suspect no other input system is driving
-            if (keyboardInput != Vector2.zero) 
-            {
-                moveInput = keyboardInput;
-            }
-            else
-            {
-                // If keyboard is not pressed, and we haven't received an event recently...
-                // Actually, let's just use keyboardInput if it's non-zero, otherwise let it be 0 (stops)
-                // EXCEPT if OnMove is driving it.
-                // Simple hack: Always update moveInput from keyboard if PlayerInput is missing.
-                if (GetComponent<PlayerInput>() == null || GetComponent<PlayerInput>().actions == null)
-                {
-                    moveInput = keyboardInput;
-                }
-            }
+        // FPS Camera Look
+        if (isFirstPerson && cameraTransform != null)
+        {
+            float mouseX = Mouse.current.delta.x.ReadValue() * mouseSensitivity * 0.1f;
+            float mouseY = Mouse.current.delta.y.ReadValue() * mouseSensitivity * 0.1f;
 
-            if (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)
-            {
-                OnInteract();
-            }
+            // Rotate Player Horizontal
+            transform.Rotate(Vector3.up * mouseX);
+
+            // Rotate Camera Vertical
+            verticalRotation -= mouseY;
+            verticalRotation = Mathf.Clamp(verticalRotation, -80f, 80f);
+            cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0, 0);
         }
     }
 
     private void FixedUpdate()
     {
-        Vector3 moveDir = new Vector3(moveInput.x, 0, moveInput.y).normalized;
-        if (moveDir.magnitude > 0.1f)
+        if (isFirstPerson)
         {
-            // Rotate towards direction (Instant or smooth)
-            Quaternion targetRot = Quaternion.LookRotation(moveDir);
-            rb.rotation = Quaternion.Slerp(rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime);
+            // FPS Movement (Relative to facing)
+            Vector3 forward = transform.forward * moveInput.y;
+            Vector3 right = transform.right * moveInput.x;
+            Vector3 moveDir = (forward + right).normalized;
             
-            // Move
             rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
         }
         else
         {
-            // Reset velocity safely to prevent sliding
-             rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); 
+            // Top Down Movement
+            Vector3 moveDir = new Vector3(moveInput.x, 0, moveInput.y).normalized;
+            if (moveDir.magnitude > 0.1f)
+            {
+                Quaternion targetRot = Quaternion.LookRotation(moveDir);
+                rb.rotation = Quaternion.Slerp(rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime);
+                rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
+            }
         }
+        
+        // Reset velocity to prevent sliding
+        rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); 
     }
 
     private void TryPickUp()
     {
+        Ray ray = GetInteractionRay();
         RaycastHit hit;
-        // Adjusted for Top-Down view where stations are lower than player center
-        // Player (Capsule) Center Y=1. Table Center Y=0.5. 
-        // We use an origin closer to the table height.
-        if (Physics.Raycast(transform.position - Vector3.up * 0.4f, transform.forward, out hit, interactDistance, interactLayer))
+        
+        Debug.DrawRay(ray.origin, ray.direction * interactDistance, Color.red, 1f);
+
+        if (Physics.Raycast(ray, out hit, interactDistance, interactLayer))
         {
             Debug.Log("Hit PickUp: " + hit.collider.name);
             if (hit.collider.TryGetComponent(out IInteractable inter)) inter.Interact(this);
@@ -116,11 +127,26 @@ public class PlayerController : MonoBehaviour
 
     private void TryInteract()
     {
+        Ray ray = GetInteractionRay();
         RaycastHit hit;
-        if (Physics.Raycast(transform.position - Vector3.up * 0.4f, transform.forward, out hit, interactDistance, interactLayer))
+
+        if (Physics.Raycast(ray, out hit, interactDistance, interactLayer))
         {
              Debug.Log("Hit Interact: " + hit.collider.name);
              if (hit.collider.TryGetComponent(out IInteractable inter)) inter.Interact(this);
+        }
+    }
+
+    private Ray GetInteractionRay()
+    {
+        if (isFirstPerson && cameraTransform != null)
+        {
+            return new Ray(cameraTransform.position, cameraTransform.forward);
+        }
+        else
+        {
+            // Top Down Ray adjustment
+            return new Ray(transform.position - Vector3.up * 0.4f, transform.forward);
         }
     }
 
