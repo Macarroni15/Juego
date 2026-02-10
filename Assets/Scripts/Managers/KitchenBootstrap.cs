@@ -11,33 +11,6 @@ public class KitchenBootstrap : MonoBehaviour
 {
     private GameObject menuCanvas;
     private GameObject currentMenuPanel;
-    private GameObject gamePanel;
-
-    // --- LOGIC VARIABLES ---
-    private int totalScore = 0;
-    private int consecutiveMediums = 0; // Para perder si sacas 3 veces 50%
-    private int roundsSurvived = 0;
-
-    [System.Serializable]
-    public class Scenario
-    {
-        public string clientName;
-        public string conditionDescription;
-        
-        public string optionA_Text;
-        public int optionA_Score;
-        public string optionA_Image; // Nombre del sprite en Resources
-        
-        public string optionB_Text;
-        public int optionB_Score;
-        public string optionB_Image;
-        
-        public string optionC_Text;
-        public int optionC_Score;
-        public string optionC_Image;
-    }
-    
-    private List<Scenario> scenarios;
 
     private void Start()
     {
@@ -97,66 +70,19 @@ public class KitchenBootstrap : MonoBehaviour
     void MostrarMenuPrincipal()
     {
         if (currentMenuPanel != null) Destroy(currentMenuPanel);
-        gamePanel = null; 
 
-        // 1. CARGAR FONDO
-        // IMPORTANTE: Resources.Load NO debe llevar extension.
-        Sprite bgSprite = Resources.Load<Sprite>("Images/fondo_cocina");
-        
-        if(bgSprite == null) Debug.LogWarning("No se encontro ninguna imagen de fondo llamada fondo_cocina.");
-        
-        Color baseColor = (bgSprite != null) ? Color.white : new Color(0.1f, 0.1f, 0.2f);
-        currentMenuPanel = CrearPanel(baseColor, bgSprite);
-        currentMenuPanel.name = "Background"; // Rename to match user request
+        currentMenuPanel = CrearPanel(new Color(0.1f, 0.1f, 0.2f)); // Fondo Azul Oscuro
+        CrearTexto(currentMenuPanel, "COCINA SIMULATOR", 0, 150, 80, Color.yellow);
 
-        // 2. OVERLAY (Oscurecer un poco, no demasiado)
-        GameObject overlay = new GameObject("Overlay");
-        overlay.transform.SetParent(currentMenuPanel.transform, false);
-        Image overlayImg = overlay.AddComponent<Image>();
-        overlayImg.color = new Color(0, 0, 0, 0.4f); // 40% opacidad
-        RectTransform ovRect = overlay.GetComponent<RectTransform>();
-        ovRect.anchorMin = Vector2.zero; ovRect.anchorMax = Vector2.one;
-        ovRect.offsetMin = Vector2.zero; ovRect.offsetMax = Vector2.zero;
+        // Botones
+        CrearBoton(currentMenuPanel, "INICIAR JUEGO", 0, 30, Color.green, () => {
+            Destroy(menuCanvas); // Adios menú
+            GenerarRestaurante(); // HOLA JUEGO
+        });
 
-        // 3. AREA TITULO (Mitad Superior)
-        GameObject headerArea = new GameObject("HeaderArea");
-        headerArea.transform.SetParent(overlay.transform, false);
-        RectTransform headerRect = headerArea.AddComponent<RectTransform>();
-        headerRect.anchorMin = new Vector2(0, 0.55f); 
-        headerRect.anchorMax = new Vector2(1, 1); // Ocupa de la mitad para arriba
-        headerRect.offsetMin = Vector2.zero; headerRect.offsetMax = Vector2.zero;
+        CrearBoton(currentMenuPanel, "TUTORIAL", 0, -50, Color.cyan, mostrarTutorial);
 
-        // Titulo
-        GameObject titleObj = CrearTexto(headerArea.transform, "LA COCINA DESASTRE", 0, 30, 80, Color.white, false);
-        titleObj.GetComponent<Text>().fontStyle = FontStyle.Bold;
-        Shadow shadow = titleObj.AddComponent<Shadow>();
-        shadow.effectColor = new Color(0,0,0,0.8f);
-        shadow.effectDistance = new Vector2(3, -3);
-        
-        RectTransform titleTR = titleObj.GetComponent<RectTransform>();
-        titleTR.anchorMin = new Vector2(0, 0.3f); titleTR.anchorMax = new Vector2(1, 0.9f);
-        titleTR.offsetMin = Vector2.zero; titleTR.offsetMax = Vector2.zero;
-
-        // Subtitulo
-        GameObject subObj = CrearTexto(headerArea.transform, "<i>Elige el plato correcto o pierde clientes</i>", 0, 0, 36, new Color(0.9f, 0.9f, 0.9f), false);
-        RectTransform subTR = subObj.GetComponent<RectTransform>();
-        subTR.anchorMin = new Vector2(0, 0.1f); subTR.anchorMax = new Vector2(1, 0.3f);
-        subTR.offsetMin = Vector2.zero; subTR.offsetMax = Vector2.zero;
-
-
-        // 4. AREA BOTONES (Mitad Inferior)
-        GameObject buttonsArea = new GameObject("ButtonsArea");
-        buttonsArea.transform.SetParent(overlay.transform, false);
-        RectTransform btnAreaRect = buttonsArea.AddComponent<RectTransform>();
-        btnAreaRect.anchorMin = new Vector2(0, 0); 
-        btnAreaRect.anchorMax = new Vector2(1, 0.5f); // Ocupa la mitad inferior
-        btnAreaRect.offsetMin = Vector2.zero; btnAreaRect.offsetMax = Vector2.zero;
-
-        // JUGAR (Centrado en la parte superior del area botones)
-        CrearBotonMenu(buttonsArea.transform, "¡ A JUGAR !", 0, 50, new Color(0.2f, 0.7f, 0.3f), new Vector2(350, 80), StartEduGame);
-        
-        // SALIR (Mas abajo)
-        CrearBotonMenu(buttonsArea.transform, "Salirdel Juego", 0, -60, new Color(0.8f, 0.3f, 0.3f), new Vector2(200, 50), () => {
+        CrearBoton(currentMenuPanel, "SALIR", 0, -130, Color.red, () => {
              Application.Quit();
              #if UNITY_EDITOR
              UnityEditor.EditorApplication.isPlaying = false;
@@ -227,49 +153,96 @@ public class KitchenBootstrap : MonoBehaviour
         return b;
     }
 
-    private void InitializeScenarios()
+    // ==============================================================================================
+    // AQUI EMPIEZA LA GENERACION DEL RESTAURANTE (EL CODIGO ORIGINAL QUE YA FUNCIONABA)
+    // ==============================================================================================
+
+    public void GenerarRestaurante()
     {
-        scenarios = new List<Scenario>();
+        Debug.Log(">>> GENERANDO RESTAURANTE... <<<<");
 
-        scenarios.Add(new Scenario {
-            clientName = "María",
-            conditionDescription = "Tengo una migraña terrible y necesito comer algo ligero.",
-            optionA_Text = "Hamburguesa", optionA_Score = 0, optionA_Image = "Food/Burger",
-            optionB_Text = "Aguacate", optionB_Score = 50, optionB_Image = "Food/Toast",
-            optionC_Text = "Pescado", optionC_Score = 100, optionC_Image = "Food/Fish"
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Carlos",
-            conditionDescription = "Tengo una maratón en 2 horas, necesito energía.",
-            optionA_Text = "Pasta", optionA_Score = 100, optionA_Image = "Food/Pasta",
-            optionB_Text = "Ensalada", optionB_Score = 50, optionB_Image = "Food/Salad",
-            optionC_Text = "Cocido", optionC_Score = 0, optionC_Image = "Food/Stew"
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Lucía",
-            conditionDescription = "Siento mucha acidez estomacal.",
-            optionA_Text = "Arroz y Pollo", optionA_Score = 100, optionA_Image = "Food/Rice",
-            optionB_Text = "Zumo Naranja", optionB_Score = 0, optionB_Image = "Food/Juice",
-            optionC_Text = "Sándwich", optionC_Score = 50, optionC_Image = "Food/Sandwich"
-        });
+        string containerName = "RESTAURANTE_GENERADO_AUTOMATICAMENTE";
         
-        // Add more if needed...
-    }
+        GameObject old = GameObject.Find(containerName);
+        if (old != null) Destroy(old);
 
-    // ... (SecuenciaInicio logic is fine) ...
+        GameObject container = new GameObject(containerName);
+        container.transform.position = Vector3.zero;
 
-    // --- JUEGO ---
+        // 1. Cámara y Luz
+        if (Camera.main == null)
+        {
+            GameObject camObj = new GameObject("Main Camera");
+            camObj.transform.SetParent(container.transform);
+            camObj.AddComponent<Camera>();
+            camObj.transform.position = new Vector3(0, 45, -45);
+            camObj.transform.rotation = Quaternion.Euler(50, 0, 0);
+            camObj.tag = "MainCamera";
+        }
+        else // Si ya existe (del menú), la recolocamos
+        {
+            Camera.main.transform.SetParent(container.transform);
+            Camera.main.transform.position = new Vector3(0, 45, -45);
+            Camera.main.transform.rotation = Quaternion.Euler(50, 0, 0);
+        }
 
-    public void StartEduGame()
-    {
-        if (currentMenuPanel != null) Destroy(currentMenuPanel);
-        CrearCanvas(); 
+        GameObject lightObj = new GameObject("Luz");
+        lightObj.transform.SetParent(container.transform);
+        Light l = lightObj.AddComponent<Light>(); l.type = LightType.Directional;
+        lightObj.transform.rotation = Quaternion.Euler(50, -30, 0);
 
-        totalScore = 0;
-        consecutiveMediums = 0;
-        roundsSurvived = 0;
+        // 2. SUELO GENERAL Y ZONIFICACIÓN
+        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        floor.name = "Suelo_Principal";
+        floor.transform.SetParent(container.transform);
+        floor.transform.localScale = new Vector3(10, 1, 10.5f);
+        floor.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.12f);
+
+        // Alfombra de Lujo en Comedor (Desplazada hacia atrás)
+        GameObject rug = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        rug.name = "Alfombra_Comedor"; rug.transform.SetParent(container.transform);
+        rug.transform.position = new Vector3(0, 0.05f, -27); rug.transform.localScale = new Vector3(5, 1, 3.5f);
+        rug.GetComponent<Renderer>().material.color = new Color(0.3f, 0.1f, 0.1f);
+
+        // 3. MUROS EXTERIORES PANORÁMICOS
+        // Muro de Fondo (Sólido)
+        CreateWall("Muro_Fondo", new Vector3(0, 4, 55), new Vector3(65, 8, 1), container.transform);
+        
+        // Muros Frontales
+        CreateWall("Muro_Frontal_L", new Vector3(-18, 4, -50), new Vector3(28, 8, 1), container.transform);
+        CreateWall("Muro_Frontal_R", new Vector3(18, 4, -50), new Vector3(28, 8, 1), container.transform);
+        CreateWall("Muro_Frontal_Top", new Vector3(0, 6.5f, -50), new Vector3(8, 3, 1), container.transform);
+        // CreateDoor("Puerta_Principal", new Vector3(0, 2.5f, -50.1f), new Vector3(8.5f, 5, 0.25f), new Color(0.4f, 0.2f, 0.1f), container.transform);
+
+        // MUROS LATERALES CON VENTANALES PANORÁMICOS
+        float[] sideX = { -32f, 32f };
+        foreach(float x in sideX) {
+            string sideName = x < 0 ? "Izq" : "Der";
+            // Zócalo inferior
+            CreateWall("Zocalo_" + sideName, new Vector3(x, 1f, 2.25f), new Vector3(1, 2, 104.5f), container.transform);
+            // Parte superior
+            CreateWall("Dintel_" + sideName, new Vector3(x, 7.5f, 2.25f), new Vector3(1, 1, 104.5f), container.transform);
+            
+            // Pilares y Cristal
+            for(int i=0; i<6; i++) {
+                float zPillar = -50 + (i * 20.9f);
+                CreateWall("Pilar_" + sideName + "_" + i, new Vector3(x, 4.5f, zPillar), new Vector3(1.1f, 5f, 1.5f), container.transform);
+                if(i < 5) {
+                    float zWin = zPillar + 10.45f;
+                    CreateGlassWindow("Ventana_" + sideName + "_" + i, new Vector3(x, 4.5f, zWin), new Vector3(0.2f, 5f, 19.4f), container.transform);
+                }
+            }
+        }
+
+        // Suelo Exterior (Para que se vea algo por las ventanas)
+        GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        ground.name = "Exterior_Ground"; ground.transform.position = new Vector3(0, -0.1f, 0);
+        ground.transform.localScale = new Vector3(20, 1, 20); ground.GetComponent<Renderer>().material.color = new Color(0.2f, 0.3f, 0.2f);
+
+
+        // 4. BAÑO REAL Y BONITO (A la izquierda - TOTALMENTE CERRADO)
+        GameObject bathroom = new GameObject("Area_Baño");
+        bathroom.transform.SetParent(container.transform);
         
         // Game Loop
         ShowRound();
