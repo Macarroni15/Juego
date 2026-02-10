@@ -9,6 +9,14 @@ using System.Collections.Generic;
 // ESTE SCRIPT HACE TODO: CARGA, MENU Y JUEGO.
 public class KitchenBootstrap : MonoBehaviour
 {
+    public static KitchenBootstrap Instance;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
+
     private GameObject menuCanvas;
     private GameObject currentMenuPanel;
     public GameObject restauranteContainer; 
@@ -17,7 +25,7 @@ public class KitchenBootstrap : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoStartGlobal()
     {
-        if (FindObjectOfType<KitchenBootstrap>() == null)
+        if (Object.FindFirstObjectByType<KitchenBootstrap>() == null)
         {
             GameObject obj = new GameObject("--- GAME MANAGER (AUTO) ---");
             obj.AddComponent<KitchenBootstrap>();
@@ -48,7 +56,7 @@ public class KitchenBootstrap : MonoBehaviour
             }
 
             // 2. EventSystem
-            if (FindObjectOfType<EventSystem>() == null)
+            if (FindFirstObjectByType<EventSystem>() == null)
             {
                 GameObject ev = new GameObject("EventSystem");
                 ev.AddComponent<EventSystem>();
@@ -449,6 +457,31 @@ public class KitchenBootstrap : MonoBehaviour
 
         // 5. JUGADOR
         SpawnPlayerTopDown(new Vector3(0, 0.1f, -4));
+        
+        // 6. DETALLE: CLIENTE QUIETO (Lo que pidió el usuario)
+        SpawnCustomerNPC(new Vector3(4, 0.1f, -2)); // Colocado a un lado
+    }
+
+    void SpawnCustomerNPC(Vector3 pos)
+    {
+        GameObject npc = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        npc.name = "CustomerNPC";
+        npc.transform.SetParent(restauranteContainer.transform);
+        npc.transform.position = pos;
+        npc.GetComponent<Renderer>().material.color = Color.yellow; // Distinto al player
+        
+        // Visual: Sombrero o detalle
+        GameObject detail = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        detail.transform.SetParent(npc.transform);
+        detail.transform.localPosition = new Vector3(0, 0.6f, 0.4f);
+        detail.transform.localScale = new Vector3(0.6f, 0.2f, 0.2f); // Gafas?
+        detail.GetComponent<Renderer>().material.color = Color.black;
+
+        // Añadir lógica de interacción
+        npc.AddComponent<CustomerNPC>();
+
+        // Texto flotante "CLIENTE"
+        CrearTextoInWorld(npc.transform, "CLIENTE", new Vector3(0, 1.2f, 0));
     }
 
     // --- GENERADORES DE ALTO DETALLE ---
@@ -1407,8 +1440,9 @@ public class KitchenBootstrap : MonoBehaviour
         ShowRound();
     }
 
-    void ShowRound()
+    public void ShowRound()
     {
+        CrearCanvas(); // Recrear canvas si fue destruido
         if(gamePanel != null) Destroy(gamePanel);
 
         // Fondo Restaurante
