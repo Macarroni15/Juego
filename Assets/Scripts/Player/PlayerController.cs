@@ -46,30 +46,70 @@ public class PlayerController : MonoBehaviour
         else TryPickUp();
     }
 
+    private void Update()
+    {
+        // Fallback Input (Direct Keyboard poll)
+        // Useful if PlayerInput component is not set up with an Action Asset
+        if (Keyboard.current != null)
+        {
+            Vector2 keyboardInput = Vector2.zero;
+            if (Keyboard.current.leftArrowKey.isPressed || Keyboard.current.aKey.isPressed) keyboardInput.x = -1;
+            if (Keyboard.current.rightArrowKey.isPressed || Keyboard.current.dKey.isPressed) keyboardInput.x = 1;
+            if (Keyboard.current.upArrowKey.isPressed || Keyboard.current.wKey.isPressed) keyboardInput.y = 1;
+            if (Keyboard.current.downArrowKey.isPressed || Keyboard.current.sKey.isPressed) keyboardInput.y = -1;
+
+            // Only override if there is input, or if we suspect no other input system is driving
+            if (keyboardInput != Vector2.zero) 
+            {
+                moveInput = keyboardInput;
+            }
+            else
+            {
+                // If keyboard is not pressed, and we haven't received an event recently...
+                // Actually, let's just use keyboardInput if it's non-zero, otherwise let it be 0 (stops)
+                // EXCEPT if OnMove is driving it.
+                // Simple hack: Always update moveInput from keyboard if PlayerInput is missing.
+                if (GetComponent<PlayerInput>() == null || GetComponent<PlayerInput>().actions == null)
+                {
+                    moveInput = keyboardInput;
+                }
+            }
+
+            if (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.eKey.wasPressedThisFrame)
+            {
+                OnInteract();
+            }
+        }
+    }
+
     private void FixedUpdate()
     {
         Vector3 moveDir = new Vector3(moveInput.x, 0, moveInput.y).normalized;
         if (moveDir.magnitude > 0.1f)
         {
+            // Rotate towards direction (Instant or smooth)
             Quaternion targetRot = Quaternion.LookRotation(moveDir);
             rb.rotation = Quaternion.Slerp(rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime);
             
-            // Unity 6 uses linearVelocity, but we can check if it exists or use movePosition
+            // Move
             rb.MovePosition(rb.position + moveDir * moveSpeed * Time.fixedDeltaTime);
         }
         else
         {
-            // Reset velocity safely
-            rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); 
+            // Reset velocity safely to prevent sliding
+             rb.linearVelocity = new Vector3(0, rb.linearVelocity.y, 0); 
         }
     }
 
     private void TryPickUp()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, transform.forward, out hit, interactDistance, interactLayer))
+        // Adjusted for Top-Down view where stations are lower than player center
+        // Player (Capsule) Center Y=1. Table Center Y=0.5. 
+        // We use an origin closer to the table height.
+        if (Physics.Raycast(transform.position - Vector3.up * 0.4f, transform.forward, out hit, interactDistance, interactLayer))
         {
-            Debug.Log("Hit: " + hit.collider.name);
+            Debug.Log("Hit PickUp: " + hit.collider.name);
             if (hit.collider.TryGetComponent(out IInteractable inter)) inter.Interact(this);
         }
     }
@@ -77,10 +117,10 @@ public class PlayerController : MonoBehaviour
     private void TryInteract()
     {
         RaycastHit hit;
-        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, transform.forward, out hit, interactDistance, interactLayer))
+        if (Physics.Raycast(transform.position - Vector3.up * 0.4f, transform.forward, out hit, interactDistance, interactLayer))
         {
-            Debug.Log("Hit: " + hit.collider.name);
-            if (hit.collider.TryGetComponent(out IInteractable inter)) inter.Interact(this);
+             Debug.Log("Hit Interact: " + hit.collider.name);
+             if (hit.collider.TryGetComponent(out IInteractable inter)) inter.Interact(this);
         }
     }
 

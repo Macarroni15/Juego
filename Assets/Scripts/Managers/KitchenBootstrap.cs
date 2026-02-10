@@ -223,7 +223,8 @@ public class KitchenBootstrap : MonoBehaviour
         // --- OPCIÓN 1: INICIO DE JUEGO ---
         CrearBotonModerno(buttonContainer.transform, "INICIO DE JUEGO", 0, 100, new Color(0.2f, 0.6f, 0.3f), () => {
             Destroy(menuCanvas); 
-            ShowRound(); 
+            // ShowRound(); // Card game disabled
+            GenerarCocina2D(); // Start 2D Top-Down Game
         });
 
         // --- OPCIÓN 2: MANUAL DE INSTRUCCIONES ---
@@ -391,45 +392,289 @@ public class KitchenBootstrap : MonoBehaviour
         t.GetComponent<RectTransform>().offsetMax = new Vector2(-10,0);
     }
 
-    GameObject CrearBarraCarga(Transform parent)
+    // ==============================================================================================
+    // GENERACIÓN DE COCINA 2D DETALLADA (VISTA TOP-DOWN REALISTA)
+    // ==============================================================================================
+
+    public void GenerarCocina2D()
     {
-        GameObject b = new GameObject("Barra"); 
-        b.transform.SetParent(parent, false);
-        Slider s = b.AddComponent<Slider>();
-        
-        RectTransform r = b.GetComponent<RectTransform>();
-        r.sizeDelta = new Vector2(500, 30); 
-        r.anchoredPosition = new Vector2(0, -50);
-        
-        // Fondo
-        GameObject fondo = new GameObject("Fondo"); 
-        fondo.transform.SetParent(b.transform, false);
-        Image imgF = fondo.AddComponent<Image>(); 
-        imgF.color = Color.gray;
-        RectTransform rf = fondo.GetComponent<RectTransform>();
-        rf.anchorMin = Vector2.zero; rf.anchorMax = Vector2.one; rf.sizeDelta = Vector2.zero;
-        
-        // Fill Area
-        GameObject fillArea = new GameObject("FillArea"); 
-        fillArea.transform.SetParent(b.transform, false);
-        RectTransform rfa = fillArea.AddComponent<RectTransform>();
-        rfa.anchorMin = Vector2.zero; rfa.anchorMax = Vector2.one; 
-        rfa.offsetMin = new Vector2(5,5); rfa.offsetMax = new Vector2(-5,-5);
+        Debug.Log(">>> GENERANDO COCINA REALISTA... <<<<");
 
-        // Fill
-        GameObject fill = new GameObject("Fill"); 
-        fill.transform.SetParent(fillArea.transform, false);
-        Image imgFill = fill.AddComponent<Image>(); 
-        imgFill.color = Color.green;
-        RectTransform rfi = fill.GetComponent<RectTransform>();
-        rfi.anchorMin = Vector2.zero; rfi.anchorMax = Vector2.one; rfi.sizeDelta = Vector2.zero;
+        string containerName = "COCINA_2D";
+        GameObject old = GameObject.Find(containerName);
+        if (old != null) Destroy(old);
 
-        s.targetGraphic = imgF; 
-        s.fillRect = rfi;
-        s.direction = Slider.Direction.LeftToRight;
-        s.value = 0;
+        restauranteContainer = new GameObject(containerName);
+        
+        // 1. Setup Cámara
+        SetupCamera2D();
 
-        return b;
+        // 2. Room Geometry (Suelo de baldosas y Paredes)
+        CrearSueloBaldosas(20, 14); 
+
+        // Paredes (Gris Oscuro)
+        CrearMuro(new Vector3(0, 1, 7.5f), new Vector3(21, 3, 1)); // Norte
+        CrearMuro(new Vector3(0, 1, -7.5f), new Vector3(21, 3, 1)); // Sur
+        CrearMuro(new Vector3(-10.5f, 1, 0), new Vector3(1, 3, 16)); // Oeste
+        CrearMuro(new Vector3(10.5f, 1, 0), new Vector3(1, 3, 16)); // Este
+
+        // 3. MOBILIARIO Y ELECTRODOMÉSTICOS (Forma de U)
+        
+        // --- PARED NORTE (Cocción y Preparación) ---
+        // Nevera (Dispensador Combos)
+        GenerarNevera(new Vector3(-8, 0, 6)); 
+        // Encimera simple
+        GenerarEncimera(new Vector3(-5, 0, 6)); 
+        // Fuegos (Stove)
+        GenerarCocina(new Vector3(-2, 0, 6));
+        // Horno (Debajo de los fuegos visualmente, o al lado)
+        GenerarHorno(new Vector3(1, 0, 6));
+        // Encimera
+        GenerarEncimera(new Vector3(4, 0, 6));
+        // Fregadero
+        GenerarFregadero(new Vector3(7, 0, 6));
+
+        // --- PARED OESTE (Ingredientes Frescos) ---
+        GenerarDispensadorCaja(new Vector3(-9.5f, 0, 3), "Tomato", Color.red);
+        GenerarDispensadorCaja(new Vector3(-9.5f, 0, 0), "Cheese", new Color(1f, 0.9f, 0.6f));
+        GenerarDispensadorCaja(new Vector3(-9.5f, 0, -3), "Meat", new Color(0.6f, 0.2f, 0.2f));
+
+        // --- PARED SUR (Tablas de Cortar y Entrega) ---
+        GenerarTablaCortar(new Vector3(-5, 0, -6));
+        GenerarTablaCortar(new Vector3(0, 0, -6));
+        GenerarLavavajillas(new Vector3(4, 0, -6));
+        GenerarBasura(new Vector3(8, 0, -6));
+
+        // 4. JUGADOR
+        SpawnPlayer(new Vector3(0, 0.05f, 0)); // Un poco elevado
+    }
+
+    void SetupCamera2D()
+    {
+        GameObject camObj;
+        if (Camera.main != null) camObj = Camera.main.gameObject;
+        else { camObj = new GameObject("Main Camera"); camObj.AddComponent<Camera>(); camObj.tag = "MainCamera"; }
+        
+        camObj.transform.SetParent(restauranteContainer.transform);
+        camObj.transform.position = new Vector3(0, 18, -2); // Leve inclinación para ver volumen
+        camObj.transform.rotation = Quaternion.Euler(85, 0, 0); // Casi cenital
+        
+        Camera cam = camObj.GetComponent<Camera>();
+        cam.orthographic = true;
+        cam.orthographicSize = 9f;
+        cam.backgroundColor = new Color(0.1f, 0.1f, 0.15f); // Fondo agradable
+    }
+
+    void CrearSueloBaldosas(int width, int depth)
+    {
+        GameObject floor = new GameObject("SueloBaldosas");
+        floor.transform.SetParent(restauranteContainer.transform);
+        // Simulamos baldosas con un plano grande y textura (o color base)
+        GameObject baseFloor = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        baseFloor.transform.SetParent(floor.transform);
+        baseFloor.transform.rotation = Quaternion.Euler(90, 0, 0);
+        baseFloor.transform.localScale = new Vector3(width, depth, 1);
+        baseFloor.GetComponent<Renderer>().material.color = new Color(0.85f, 0.85f, 0.9f); // Blanco/grisaceo
+
+        // Grid lines (Visual fake)
+        for(int x = -width/2; x <= width/2; x+=2) {
+            GameObject line = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            line.transform.SetParent(floor.transform);
+            line.transform.position = new Vector3(x, 0.01f, 0);
+            line.transform.localScale = new Vector3(0.05f, 0.01f, depth);
+            line.GetComponent<Renderer>().material.color = new Color(0.7f, 0.7f, 0.75f);
+        }
+        for(int z = -depth/2; z <= depth/2; z+=2) {
+            GameObject line = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            line.transform.SetParent(floor.transform);
+            line.transform.position = new Vector3(0, 0.01f, z);
+            line.transform.localScale = new Vector3(width, 0.01f, 0.05f);
+            line.GetComponent<Renderer>().material.color = new Color(0.7f, 0.7f, 0.75f);
+        }
+    }
+
+    // --- GENERADORES DE MOBILIARIO REALISTA ---
+
+    void GenerarEncimera(Vector3 pos)
+    {
+        GameObject obj = CreateBlock("Encimera", pos, new Vector3(2.5f, 1.2f, 2), new Color(0.8f, 0.8f, 0.8f));
+        // Tope de mármol
+        GameObject top = CreateBlock("Tope", pos + new Vector3(0, 0.6f, 0), new Vector3(2.5f, 0.1f, 2), new Color(0.95f, 0.95f, 0.95f));
+        top.transform.SetParent(obj.transform);
+    }
+
+    void GenerarFregadero(Vector3 pos)
+    {
+        // Mueble base
+        GameObject obj = CreateBlock("MuebleFregadero", pos, new Vector3(2.5f, 1.2f, 2), new Color(0.6f, 0.5f, 0.4f)); // Madera oscura
+        
+        // Pila (Agujero simulado gris oscuro)
+        GameObject sink = CreateBlock("Pila", pos + new Vector3(0, 0.61f, 0), new Vector3(1.8f, 0.05f, 1.4f), new Color(0.3f, 0.3f, 0.35f));
+        sink.transform.SetParent(obj.transform);
+
+        // Grifo (Cilindro curvado fake)
+        GameObject tap = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        tap.transform.SetParent(obj.transform);
+        tap.transform.position = pos + new Vector3(0, 1f, 0.8f);
+        tap.transform.localScale = new Vector3(0.1f, 0.5f, 0.1f);
+        tap.GetComponent<Renderer>().material.color = Color.gray;
+
+        CrearTextoInWorld(obj.transform, "FREGADERO", new Vector3(0, 2, 0));
+    }
+
+    void GenerarCocina(Vector3 pos)
+    {
+        // Horno/Cocina body
+        GameObject obj = CreateBlock("Cocina", pos, new Vector3(2.5f, 1.2f, 2), Color.black);
+        
+        // Fuegos (4 círculos rojos)
+        float[,] positions = { {-0.5f, -0.5f}, {0.5f, -0.5f}, {-0.5f, 0.5f}, {0.5f, 0.5f} };
+        for(int i=0; i<4; i++) {
+            GameObject burner = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            burner.transform.SetParent(obj.transform);
+            burner.transform.position = pos + new Vector3(positions[i,0], 0.61f, positions[i,1]);
+            burner.transform.localScale = new Vector3(0.6f, 0.05f, 0.6f);
+            burner.GetComponent<Renderer>().material.color = new Color(0.8f, 0.2f, 0.1f);
+        }
+
+        // Add Logic Placeholder (Interaction)
+        // obj.AddComponent<StoveStation>(); 
+        CrearTextoInWorld(obj.transform, "FUEGOS", new Vector3(0, 2, 0));
+    }
+
+    void GenerarHorno(Vector3 pos)
+    {
+        // Similar a cocina pero con ventana frontal
+        GameObject obj = CreateBlock("Horno", pos, new Vector3(2.5f, 1.2f, 2), new Color(0.2f, 0.2f, 0.2f));
+        
+        // Puerta cristal
+        GameObject door = CreateBlock("Puerta", pos + new Vector3(0, 0, -1.01f), new Vector3(1.8f, 0.8f, 0.1f), new Color(0.1f, 0.1f, 0.15f));
+        door.transform.SetParent(obj.transform);
+
+        GameObject handle = CreateBlock("Maneta", pos + new Vector3(0, 0.3f, -1.1f), new Vector3(1.6f, 0.05f, 0.05f), Color.white);
+        handle.transform.SetParent(obj.transform);
+
+        CrearTextoInWorld(obj.transform, "HORNO", new Vector3(0, 2, 0));
+    }
+
+    void GenerarLavavajillas(Vector3 pos)
+    {
+        GameObject obj = CreateBlock("Lavavajillas", pos, new Vector3(2.5f, 1.2f, 2), Color.white);
+        
+        // Panel control
+        GameObject panel = CreateBlock("Panel", pos + new Vector3(0, 0.4f, -1.01f), new Vector3(2.5f, 0.3f, 0.05f), Color.gray);
+        panel.transform.SetParent(obj.transform);
+
+        CrearTextoInWorld(obj.transform, "LAVAVAJILLAS", new Vector3(0, 2, 0));
+    }
+
+    void GenerarNevera(Vector3 pos)
+    {
+        // Alto
+        GameObject obj = CreateBlock("Nevera", pos + Vector3.up * 0.5f, new Vector3(2.5f, 2.5f, 2), new Color(0.7f, 0.8f, 0.9f));
+        GameObject doorLine = CreateBlock("Sep", pos + Vector3.up * 0.5f, new Vector3(0.05f, 2.4f, 2.1f), Color.gray);
+        doorLine.transform.SetParent(obj.transform);
+        
+        CrearTextoInWorld(obj.transform, "NEVERA", new Vector3(0, 2, 0));
+    }
+
+    void GenerarDispensadorCaja(Vector3 pos, string ingredient, Color c)
+    {
+        GameObject box = CreateBlock("Caja_" + ingredient, pos, new Vector3(1.5f, 1f, 1.5f), new Color(0.6f, 0.4f, 0.2f)); // Carton
+        // Contenido
+        GameObject content = CreateBlock("Contenido", pos + Vector3.up * 0.51f, new Vector3(1.3f, 0.1f, 1.3f), c);
+        content.transform.SetParent(box.transform);
+
+        CrearTextoInWorld(box.transform, ingredient, new Vector3(0, 2, 0));
+
+        DispenserStation ds = box.AddComponent<DispenserStation>();
+        ds.ingredientName = ingredient;
+    }
+
+    void GenerarTablaCortar(Vector3 pos)
+    {
+        GameObject table = CreateBlock("MesaDespiece", pos, new Vector3(2.5f, 1.2f, 2), new Color(0.81f, 0.81f, 0.81f)); // Inox
+        
+        GameObject board = CreateBlock("Tabla", pos + Vector3.up * 0.61f, new Vector3(1.2f, 0.1f, 0.8f), new Color(0.6f, 0.4f, 0.2f));
+        board.transform.SetParent(table.transform);
+
+        CrearTextoInWorld(table.transform, "CORTAR", new Vector3(0, 2, 0));
+        table.AddComponent<CuttingStation>();
+    }
+
+    void GenerarBasura(Vector3 pos)
+    {
+        GameObject bin = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        bin.transform.SetParent(restauranteContainer.transform);
+        bin.transform.position = pos;
+        bin.transform.localScale = new Vector3(1.2f, 1f, 1.2f);
+        bin.GetComponent<Renderer>().material.color = new Color(0.1f, 0.2f, 0.1f); // Verde oscuro
+
+        CrearTextoInWorld(bin.transform, "BASURA", new Vector3(0, 2, 0));
+        bin.AddComponent<TrashStation>();
+    }
+
+    // --- UTILS ---
+    GameObject CreateBlock(string name, Vector3 pos, Vector3 scale, Color c)
+    {
+        GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        obj.name = name;
+        obj.transform.SetParent(restauranteContainer.transform);
+        obj.transform.position = pos;
+        obj.transform.localScale = scale;
+        obj.GetComponent<Renderer>().material.color = c;
+        return obj;
+    }
+
+    void CrearMuro(Vector3 pos, Vector3 scale)
+    {
+        GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wall.transform.SetParent(restauranteContainer.transform);
+        wall.transform.position = pos;
+        wall.transform.localScale = scale;
+        wall.GetComponent<Renderer>().material.color = new Color(0.5f, 0.5f, 0.6f);
+    }
+
+    void SpawnPlayer(Vector3 pos)
+    {
+        GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        player.name = "Chef";
+        player.transform.SetParent(restauranteContainer.transform);
+        player.transform.position = pos;
+        player.GetComponent<Renderer>().material.color = Color.white;
+
+        // Sombrero de Chef (Visual)
+        GameObject hat = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        hat.transform.SetParent(player.transform);
+        hat.transform.localPosition = new Vector3(0, 1f, 0);
+        hat.transform.localScale = new Vector3(0.6f, 0.4f, 0.6f);
+        hat.GetComponent<Renderer>().material.color = Color.white;
+        Destroy(hat.GetComponent<Collider>()); // Solo visual
+
+        // Lógica
+        PlayerController pc = player.AddComponent<PlayerController>();
+        pc.interactDistance = 2.5f;
+
+        // Input System: Necesita 'PlayerInput' para enviar mensajes a 'OnMove'
+        PlayerInput pi = player.AddComponent<PlayerInput>();
+        pi.notificationBehavior = PlayerNotifications.InvokeCSharpEvents; 
+    }
+
+    void CrearTextoInWorld(Transform parent, string text, Vector3 localPos)
+    {
+        GameObject tObj = new GameObject("Label");
+        tObj.transform.SetParent(parent);
+        tObj.transform.localPosition = localPos;
+        // Rotar para ver desde arriba
+        tObj.transform.rotation = Quaternion.Euler(90, 0, 0); 
+        tObj.transform.localScale = Vector3.one * 0.1f;
+
+        TextMesh tm = tObj.AddComponent<TextMesh>();
+        tm.text = text;
+        tm.fontSize = 40;
+        tm.anchor = TextAnchor.MiddleCenter;
+        tm.alignment = TextAlignment.Center;
+        tm.color = Color.white;
     }
 
     // ==============================================================================================
