@@ -9,7 +9,7 @@ public class DevAssetGenerator
 {
     static DevAssetGenerator()
     {
-        GenerateMissingAssets();
+        // GenerateMissingAssets(); // Removido para evitar generación automática al cargar el editor
     }
 
     private static void GenerateMissingAssets()
