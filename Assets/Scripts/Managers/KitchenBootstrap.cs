@@ -2177,20 +2177,75 @@ public class KitchenBootstrap : MonoBehaviour
         // Elegir escenario ALEATORIO
         Scenario current = scenarios[Random.Range(0, scenarios.Count)];
 
-        // --- 1. HUD PUNTUACIÓN ---
-        GameObject scorePanel = CrearPanelTransparente(gamePanel.transform, new Vector2(0.6f, 0.85f), new Vector2(0.98f, 0.98f));
+        // --- 1. HUD PUNTUACIÓN (Top Right Overlay) ---
+        GameObject scorePanel = CrearPanelTransparente(gamePanel.transform, new Vector2(0.6f, 0.92f), new Vector2(0.95f, 0.98f)); // Más arriba
         Image scoreBg = scorePanel.AddComponent<Image>();
         scoreBg.color = new Color(0, 0, 0, 0.6f); 
         
         string scoreText = $"<color=yellow>RONDA: {roundsSurvived + 1}</color>   |   <color=white>PUNTOS: {totalScore}</color>";
-        CrearTexto(scorePanel.transform, scoreText, 0, 0, 30, Color.white, true);
+        CrearTexto(scorePanel.transform, scoreText, 0, 0, 24, Color.white, true);
 
 
-        // --- 2. COCINERA ---
+        // ======================================================================================
+        // SECCIÓN SUPERIOR: CLIENTE Y DIÁLOGO
+        // ======================================================================================
+
+        // --- 2. NUBE DE DIÁLOGO (Izquierda - Centro) ---
+        GameObject bubble = new GameObject("Bubble");
+        bubble.transform.SetParent(gamePanel.transform, false);
+        Image bubbleImg = bubble.AddComponent<Image>();
+        Sprite nubeSprite = GetOrGenerateSprite("Images/espacio", Color.white);
+        if(nubeSprite != null) {
+             bubbleImg.sprite = nubeSprite;
+             bubbleImg.color = Color.white;
+        } else { 
+             bubbleImg.color = new Color(1f, 1f, 1f, 0.95f);
+        }
+           
+        RectTransform bubbleRect = bubble.GetComponent<RectTransform>();
+        // Ocupa la parte superior izquierda/centro
+        bubbleRect.anchorMin = new Vector2(0.05f, 0.55f);
+        bubbleRect.anchorMax = new Vector2(0.70f, 0.90f);
+        bubbleRect.offsetMin = Vector2.zero; bubbleRect.offsetMax = Vector2.zero;
+
+        // Texto Pregunta
+        string pregunta = $"<b>CLIENTE: {current.clientName}</b>\n\n" +
+                          $"{current.conditionDescription}\n\n" +
+                          "<color=blue>¿Qué le preparas?</color>";
+        
+        GameObject txtObj = CrearTexto(bubble.transform, pregunta, 0, 0, 26, Color.black, true);
+        RectTransform txtRect = txtObj.GetComponent<RectTransform>();
+        txtRect.offsetMin = new Vector2(30, 20);
+        txtRect.offsetMax = new Vector2(-30, -20);
+
+        // --- 3. IMAGEN CLIENTE (Persona) - Derecha ---
+        GameObject clientObj = new GameObject("ClientImg");
+        clientObj.transform.SetParent(gamePanel.transform, false);
+        Image clientImg = clientObj.AddComponent<Image>();
+        Sprite spriteClient = GetOrGenerateSprite("Images/persona", Color.gray);
+        
+        if(spriteClient != null) {
+            clientImg.sprite = spriteClient;
+            clientImg.color = Color.white;
+            clientImg.preserveAspect = true; 
+        }
+
+        RectTransform clientRect = clientObj.GetComponent<RectTransform>();
+        // A la derecha del diálogo
+        clientRect.anchorMin = new Vector2(0.72f, 0.55f); 
+        clientRect.anchorMax = new Vector2(0.95f, 0.90f); 
+        clientRect.offsetMin = Vector2.zero; clientRect.offsetMax = Vector2.zero;
+
+
+        // ======================================================================================
+        // SECCIÓN INFERIOR: COCINERA Y OPCIONES
+        // ======================================================================================
+
+        // --- 4. COCINERA (Abajo Izquierda) ---
         GameObject cookObj = new GameObject("CocineraImg");
         cookObj.transform.SetParent(gamePanel.transform, false);
         Image cookImg = cookObj.AddComponent<Image>();
-        Sprite spriteCocinera = GetOrGenerateSprite("Characters/Cocinera", Color.magenta);
+        Sprite spriteCocinera = GetOrGenerateSprite("Images/cocinera", Color.magenta);
         if(spriteCocinera != null) {
             cookImg.sprite = spriteCocinera;
             cookImg.color = Color.white;
@@ -2200,59 +2255,33 @@ public class KitchenBootstrap : MonoBehaviour
         }
         
         RectTransform cookRect = cookObj.GetComponent<RectTransform>();
-        cookRect.anchorMin = new Vector2(0.02f, 0.1f); 
-        cookRect.anchorMax = new Vector2(0.25f, 0.9f); 
+        // Abajo a la izquierda, junto a las opciones
+        cookRect.anchorMin = new Vector2(0.02f, 0.05f); 
+        cookRect.anchorMax = new Vector2(0.20f, 0.45f); 
         cookRect.offsetMin = Vector2.zero; cookRect.offsetMax = Vector2.zero;
-        
-        // --- 3. NUBE DE DIÁLOGO ---
-        GameObject bubble = new GameObject("Bubble");
-        bubble.transform.SetParent(gamePanel.transform, false);
-        Image bubbleImg = bubble.AddComponent<Image>();
-        Sprite nubeSprite = Resources.Load<Sprite>("NubeDialogo");
-        if(nubeSprite != null) {
-             bubbleImg.sprite = nubeSprite;
-             bubbleImg.color = Color.white;
-        } else { 
-             bubbleImg.color = new Color(1f, 1f, 1f, 0.95f);
-        }
-           
-        RectTransform bubbleRect = bubble.GetComponent<RectTransform>();
-        bubbleRect.anchorMin = new Vector2(0.3f, 0.5f);
-        bubbleRect.anchorMax = new Vector2(0.9f, 0.9f);
-        bubbleRect.offsetMin = Vector2.zero; bubbleRect.offsetMax = Vector2.zero;
-
-        // Texto Pregunta
-        string pregunta = $"<b>CLIENTE: {current.clientName}</b>\n\n" +
-                          $"{current.conditionDescription}\n\n" +
-                          "<color=blue>¿Qué le preparas?</color>";
-        
-        GameObject txtObj = CrearTexto(bubble.transform, pregunta, 0, 0, 28, Color.black, true);
-        RectTransform txtRect = txtObj.GetComponent<RectTransform>();
-        txtRect.offsetMin = new Vector2(40, 30);
-        txtRect.offsetMax = new Vector2(-40, -30);
 
 
-        // --- 4. OPCIONES (CARDS) ---
-        // Area gris oscura de fondo para resaltar las cartas
+        // --- 5. OPCIONES (CARDS) - Derecha de la Cocinera ---
+        // Area gris oscura de fondo
         GameObject optionsArea = new GameObject("OptionsBackground");
         optionsArea.transform.SetParent(gamePanel.transform, false);
         Image optBg = optionsArea.AddComponent<Image>();
-        optBg.color = new Color(0, 0, 0, 0.3f); // Fondo semitransparente detrás de las opciones
+        optBg.color = new Color(0, 0, 0, 0.3f); 
 
         RectTransform optKRect = optionsArea.GetComponent<RectTransform>();
-        optKRect.anchorMin = new Vector2(0.3f, 0.05f);
-        optKRect.anchorMax = new Vector2(0.95f, 0.45f); 
+        // Ocupa el resto del ancho inferior
+        optKRect.anchorMin = new Vector2(0.22f, 0.05f);
+        optKRect.anchorMax = new Vector2(0.98f, 0.45f); 
         optKRect.offsetMin = Vector2.zero; optKRect.offsetMax = Vector2.zero;
 
         // --- SISTEMA DE ALEATORIEDAD ---
-        // Creamos una lista con las 3 opciones
         List<OptionDataHelper> choices = new List<OptionDataHelper>() {
             new OptionDataHelper { text = current.optionA_Text, image = current.optionA_Image, score = current.optionA_Score },
             new OptionDataHelper { text = current.optionB_Text, image = current.optionB_Image, score = current.optionB_Score },
             new OptionDataHelper { text = current.optionC_Text, image = current.optionC_Image, score = current.optionC_Score }
         };
 
-        // Barajamos la lista (Shuffle)
+        // Barajamos
         for (int i = 0; i < choices.Count; i++) {
             OptionDataHelper temp = choices[i];
             int randomIndex = Random.Range(i, choices.Count);
@@ -2260,7 +2289,7 @@ public class KitchenBootstrap : MonoBehaviour
             choices[randomIndex] = temp;
         }
 
-        // Generamos las cartas en orden aleatorio
+        // Generamos cartas
         string[] labels = { "A", "B", "C" };
         for (int i = 0; i < choices.Count; i++) {
             OptionDataHelper choice = choices[i];
@@ -2268,7 +2297,6 @@ public class KitchenBootstrap : MonoBehaviour
         }
 
         // --- BOTÓN SALIR (X) ---
-        // Botón pequeño en la esquina superior derecha para cerrar la pregunta
         GameObject closeBtnObj = new GameObject("Btn_Close");
         closeBtnObj.transform.SetParent(gamePanel.transform, false);
         Image closeImg = closeBtnObj.AddComponent<Image>();
@@ -2277,13 +2305,12 @@ public class KitchenBootstrap : MonoBehaviour
         Button closeBtn = closeBtnObj.AddComponent<Button>();
         closeBtn.onClick.AddListener(() => {
             if(gamePanel != null) Destroy(gamePanel);
-            // Volver a mostrar el prompt de interacción si se acerca de nuevo
             StartCoroutine(ReenablePromptDelayed());
         });
 
         RectTransform closeRect = closeBtnObj.GetComponent<RectTransform>();
-        closeRect.anchorMin = new Vector2(0.95f, 0.92f);
-        closeRect.anchorMax = new Vector2(0.99f, 0.98f);
+        closeRect.anchorMin = new Vector2(0.96f, 0.94f);
+        closeRect.anchorMax = new Vector2(0.99f, 0.98f); // Arriba a la derecha del todo
         closeRect.offsetMin = Vector2.zero; closeRect.offsetMax = Vector2.zero;
 
         CrearTexto(closeBtnObj.transform, "X", 0, 0, 20, Color.white, true);
