@@ -7,7 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 // ESTE SCRIPT HACE TODO: CARGA, MENU Y JUEGO.
-[ExecuteAlways]
+// [ExecuteAlways] - Removido para evitar ejecución automática no deseada en el editor
 public class KitchenBootstrap : MonoBehaviour
 {
     public static KitchenBootstrap Instance;
@@ -16,7 +16,7 @@ public class KitchenBootstrap : MonoBehaviour
     private GameObject currentMenuPanel;
 
     [Header("CONFIGURACIÓN DE DISEÑO")]
-    public bool autoGenerateInEditor = true;
+    public bool autoGenerateInEditor = false;
     
     [Header("PREFABS (Opcional - Reemplaza los cubos)")]
     public GameObject floorPrefab;
@@ -73,20 +73,14 @@ public class KitchenBootstrap : MonoBehaviour
             }
         }
 
-        #if UNITY_EDITOR
-        if (!Application.isPlaying && autoGenerateInEditor) {
-            BuscarOReemplazarCocina();
-        }
-        #endif
+        // Eliminado auto-generate forzado para respetar control del usuario
+
     }
 
     private void OnEnable()
     {
-        #if UNITY_EDITOR
-        if (!Application.isPlaying) {
-             BuscarOReemplazarCocina();
-        }
-        #endif
+        // Eliminado auto-generate en OnEnable para evitar procesos en segundo plano indeseados
+
     }
 
     void BuscarOReemplazarCocina()
@@ -423,11 +417,13 @@ public class KitchenBootstrap : MonoBehaviour
         if (this.menuCanvas != null) DestroySafe(this.menuCanvas);
 
         GameObject container = GameObject.Find("COCINA_2D");
-        if (container == null)
-        {
-            GenerarCocina2D();
-            container = GameObject.Find("COCINA_2D");
-        }
+    if (container == null) container = GameObject.Find("RESTAURANTE_ESTRUCTURA");
+
+    if (container == null)
+    {
+        Debug.LogError("‼️ ERROR: No hay cocina ni restaurante generado. Por favor, genera uno desde el menú Contextual de KitchenBootstrap antes de entrar.");
+        return; 
+    }
         
         restauranteContainer = container;
         SetupCameraRealist(new Vector3(0, 18, -16), 42);
@@ -654,92 +650,12 @@ public class KitchenBootstrap : MonoBehaviour
 
     public void GenerarCocina2D()
     {
-        GenerarCocina2D_Internal(false);
+        GenerarRestaurante(); // Redirect to the most modern version autonomously
     }
 
     private void GenerarCocina2D_Internal(bool soloArquitectura)
     {
-        Debug.Log(soloArquitectura ? ">>> GENERANDO ARQUITECTURA... <<<<" : ">>> GENERANDO COCINA COMPLETA... <<<<");
-
-        GameObject oldRoot = GameObject.Find("COCINA_2D");
-        if (oldRoot != null) DestroySafe(oldRoot);
-        
-        GameObject root = new GameObject("COCINA_2D");
-        restauranteContainer = root;
-
-        // --- SUB-CARPETAS (Locales para no ensuciar el global) ---
-        Transform folderStructure = new GameObject("_Estructura").transform; folderStructure.SetParent(root.transform);
-        Transform folderZones = new GameObject("_Zonas_Trabajo").transform; folderZones.SetParent(root.transform);
-        Transform folderAppliances = new GameObject("_Electrodomesticos").transform; folderAppliances.transform.SetParent(root.transform);
-        Transform folderDecor = new GameObject("_Decoracion").transform; folderDecor.transform.SetParent(root.transform);
-        Transform folderLights = new GameObject("_Iluminacion").transform; folderLights.transform.SetParent(root.transform);
-
-        // 1. CÁMARA & ILUMINACIÓN
-        SetupCameraRealist(new Vector3(0, 18, -16), 42);
-        
-        GameObject sun = new GameObject("LuzGlobal"); sun.transform.SetParent(folderLights);
-        Light l = sun.AddComponent<Light>(); l.type = LightType.Directional; l.intensity = 1.2f;
-        sun.transform.rotation = Quaternion.Euler(50, -30, 0);
-
-        CreatePointLight(new Vector3(-10, 5, 5), new Color(0.5f, 0.8f, 1f), 15, 0.5f, folderLights);
-        CreatePointLight(new Vector3(10, 5, 5), new Color(1f, 0.9f, 0.7f), 15, 0.5f, folderLights);
-
-        // 2. ARQUITECTURA
-        int width = 32; int depth = 22;
-        CreateBlock("SueloMaster", Vector3.zero, new Vector3(width, 0.1f, depth), new Color(0.05f, 0.05f, 0.07f), folderStructure);
-
-        float wallH = 7f;
-        CreateWall("MuroFondo", new Vector3(0, wallH/2, 11), new Vector3(width, wallH, 0.5f), folderStructure);
-        GenerarVentanalPanoramico(new Vector3(-9, wallH/2, 10.7f), folderStructure);
-        GenerarVentanalPanoramico(new Vector3(9, wallH/2, 10.7f), folderStructure);
-        GenerarMuroListones(new Vector3(-16, wallH/2, 0), depth, wallH, folderStructure); 
-        CrearMuroRealista(new Vector3(16, wallH/2, 0), new Vector3(0.5f, wallH, depth), new Color(0.1f, 0.1f, 0.12f), folderStructure);
-
-        if (soloArquitectura) {
-            Debug.Log(">>> ARQUITECTURA GENERADA.");
-            return;
-        }
-
-        // 3. ZONAS DE TRABAJO (Usando carpetas específicas)
-        GenerarEncimeraBicolor_WithParent(new Vector3(-10, 0, 8), 8, folderZones);
-        GenerarPlacaInduccion_WithParent(new Vector3(-10, 0, 8), folderZones);
-        
-        GenerarEncimeraBicolor_WithParent(new Vector3(10, 0, 8), 8, folderZones);
-        GenerarFregaderoRealista_WithParent(new Vector3(10, 0, 8), folderZones); 
-        
-        // El fregadero ahora tiene un nombre predecible para buscarlo
-        GameObject faucet = GameObject.Find("GrifoCisne");
-        if(faucet != null) {
-            if (faucet.GetComponent<DispenserStation>() == null) {
-                DispenserStation ds = faucet.AddComponent<DispenserStation>();
-                ds.ingredientName = "Agua";
-            }
-            CrearTextoInWorld(faucet.transform, "AGUA", new Vector3(0, 1.2f, 0));
-        }
-
-        GenerarIslaWaterfall_WithParent(new Vector3(0, 0, 1), 9, 4.5f, folderZones); 
-        GameObject cBoard = CreateBlock("TablaCorte_Interact", new Vector3(-2, 1.25f, 1), new Vector3(1.2f, 0.05f, 1.0f), Color.white, folderZones);
-        if (cBoard.GetComponent<CuttingStation>() == null) cBoard.AddComponent<CuttingStation>();
-        CrearTextoInWorld(cBoard.transform, "CORTE", new Vector3(0, 0.8f, 0));
-
-        GameObject bin = CreateBlock("Basura_Pro", new Vector3(-14, 0.6f, -9), new Vector3(0.8f, 1.2f, 0.8f), new Color(0.2f, 0.2f, 0.2f), folderZones);
-        if (bin.GetComponent<TrashStation>() == null) bin.AddComponent<TrashStation>();
-        CrearTextoInWorld(bin.transform, "BASURA", new Vector3(0, 1.2f, 0));
-
-        GameObject delivBar = CreateBlock("Entrega_Pro", new Vector3(-3, 0.6f, -7), new Vector3(8, 1.2f, 0.8f), new Color(0.1f, 0.1f, 0.1f), folderZones);
-        if (delivBar.GetComponent<DeliveryStation>() == null) delivBar.AddComponent<DeliveryStation>();
-        CrearTextoInWorld(delivBar.transform, "ENTREGA", new Vector3(0, 1.2f, -0.5f));
-
-        // 4. ELECTRODOMESTICOS
-        GenerarTorreHornos_WithParent(new Vector3(-14, 0, 8), folderAppliances);
-        GenerarNeveraAmericana_WithParent(new Vector3(14, 0, 8), folderAppliances);
-
-        // 5. DECORACIÓN
-        for(int i=-2; i<=2; i++) GenerarSillaDiseno_WithParent(new Vector3(i*2.5f, 0.8f, -8.5f), 180, new Color(0.7f, 0.6f, 0.2f), folderDecor);
-        GenerarPlantaGrande_WithParent(new Vector3(-14, 0, -10f), folderDecor);
-        GenerarPlantaGrande_WithParent(new Vector3(14, 0, -10f), folderDecor);
-
-        Debug.Log(">>> COCINA GENERADA COMPLETAMENTE SIN ERRORES.");
+        GenerarRestaurante(); // Redirect to the most modern version autonomously
     }
 
     void GenerarIslaWaterfall(Vector3 pos, float w, float d)
@@ -1349,17 +1265,6 @@ public class KitchenBootstrap : MonoBehaviour
         GenerarBowlFrutas(pos);
     }
     
-    void GenerarLamparaColgante(Vector3 pos)
-    {
-        // Cable
-        CreateBlock("Cable", pos + Vector3.up*1f, new Vector3(0.02f, 2f, 0.02f), Color.black);
-        // Pantalla media esfera
-        GameObject hem = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        hem.transform.position = pos;
-        hem.transform.localScale = Vector3.one * 1.2f;
-        hem.GetComponent<Renderer>().material.color = new Color(0.8f, 0.8f, 0.8f); // Plata mate
-        hem.transform.SetParent(restauranteContainer.transform);
-    }
 
     void GenerarPlantaGrande(Vector3 pos)
     {
@@ -1371,23 +1276,6 @@ public class KitchenBootstrap : MonoBehaviour
         leaves.GetComponent<Renderer>().material.color = new Color(0.1f, 0.5f, 0.2f);
     }
 
-    void GenerarBowlFrutas(Vector3 pos)
-    {
-        GameObject bowl = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        bowl.transform.SetParent(restauranteContainer.transform);
-        bowl.transform.position = pos;
-        bowl.transform.localScale = new Vector3(0.6f, 0.3f, 0.6f);
-        bowl.GetComponent<Renderer>().material.color = new Color(0.6f, 0.4f, 0.2f); // Madera
-
-        // Frutas (naranjas de la foto)
-        for(int i=0; i<3; i++) {
-            GameObject fruit = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            fruit.transform.SetParent(bowl.transform);
-            fruit.transform.localPosition = new Vector3(Mathf.Sin(i*2)*0.3f, 0.4f, Mathf.Cos(i*2)*0.3f);
-            fruit.transform.localScale = Vector3.one * 0.4f;
-            fruit.GetComponent<Renderer>().material.color = new Color(1f, 0.5f, 0f); // Naranja
-        }
-    }
 
     void GenerarCocinaConHorno(Vector3 pos)
     {
@@ -1709,83 +1597,361 @@ public class KitchenBootstrap : MonoBehaviour
         tm.alignment = TextAlignment.Center;
         tm.color = Color.white;
     }
-
     // ==============================================================================================
     // AQUI EMPIEZA LA GENERACION DEL RESTAURANTE (EL CODIGO ORIGINAL QUE YA FUNCIONABA)
     // ==============================================================================================
 
-    [ContextMenu("Generar Restaurante Original")]
-    [ContextMenu("✨ GENERAR RESTAURANTE PREMIUM")]
+    [ContextMenu("💎 [PRESENTACIÓN PRO] GENERAR ENTORNO ELITE")]
     public void GenerarRestaurante()
     {
-        Debug.Log(">>> TRANSFORMANDO RESTAURANTE A NIVEL PREMIUM... <<<<");
+        Debug.Log(">>> INICIANDO PROYECTO: RESTAURANTE ELITE EXECUTIVE 2026 <<<");
 
-        GameObject oldRoot = GameObject.Find("RESTAURANTE_ESTRUCTURA");
-        if (oldRoot != null) DestroySafe(oldRoot);
+        // 1. LIMPIEZA TOTAL (Garantizar que no queda NADA antiguo de ningún tipo)
+        string[] rootNames = { "RESTAURANTE_ESTRUCTURA", "COCINA_2D", "Environment_Main" };
+        foreach(string rName in rootNames) {
+            GameObject old = GameObject.Find(rName);
+            if(old != null) DestroySafe(old);
+        }
         
         GameObject root = new GameObject("RESTAURANTE_ESTRUCTURA");
         restauranteContainer = root;
 
-        // --- SUB-CARPETAS ---
-        Transform folderStructure = new GameObject("_Arquitectura").transform; folderStructure.SetParent(root.transform);
-        Transform folderDining = new GameObject("_Sala_Comedor").transform; folderDining.SetParent(root.transform);
-        Transform folderStaff = new GameObject("_Zonas_Privadas").transform; folderStaff.transform.SetParent(root.transform);
-        Transform folderAmbience = new GameObject("_Ambientacion").transform; folderAmbience.SetParent(root.transform);
+        // --- PALETA DE LUJO (Fijada para evitar errores) ---
+        Color colWallnut = new Color(0.18f, 0.12f, 0.08f); 
+        Color colMarble = new Color(0.96f, 0.96f, 0.98f); 
+        Color colBrushedGold = new Color(0.82f, 0.65f, 0.35f); 
+        Color colMatteBlack = new Color(0.08f, 0.08f, 0.1f);
+        Color colSkyBlue = new Color(0.5f, 0.7f, 1f); // Para las ventanas (sin shader para evitar magenta)
 
-        // 1. ILUMINACIÓN & CÁMARA
-        SetupCameraRealist(new Vector3(0, 15, -20), 45);
-        GameObject sun = new GameObject("Luz_Ambiente"); sun.transform.SetParent(folderAmbience);
-        Light l = sun.AddComponent<Light>(); l.type = LightType.Directional; l.intensity = 1.1f;
-        sun.transform.rotation = Quaternion.Euler(45, -45, 0);
+        // --- HIERARCHY ---
+        Transform fStructure = new GameObject("_ARCH_Architectural_Shell").transform; fStructure.SetParent(root.transform);
+        Transform fDining = new GameObject("_ZONE_Dining_Experience").transform; fDining.SetParent(root.transform);
+        Transform fKitchen = new GameObject("_CORE_Culinary_Center").transform; fKitchen.SetParent(root.transform);
+        Transform fAtmosphere = new GameObject("_FX_Mood_Lighting").transform; fAtmosphere.SetParent(root.transform);
 
-        // Luces puntuales decorativas
-        CreatePointLight(new Vector3(-5, 6, -5), new Color(1f, 0.9f, 0.7f), 15, 0.8f, folderAmbience);
-        CreatePointLight(new Vector3(15, 6, -5), new Color(1f, 0.9f, 0.7f), 15, 0.8f, folderAmbience);
-
-        // 2. ARQUITECTURA (Suelo y Paredes)
-        // Suelo Principal: Moqueta Azul Noche Profundo
-        CreateBlock("Suelo_Master", new Vector3(8, -0.05f, 15), new Vector3(50, 0.1f, 80), new Color(0.1f, 0.12f, 0.15f), folderStructure);
+        // 1. CONFIGURACIÓN DE ESCENA Y CÁMARA
+        SetupCameraRealist(new Vector3(0, 20, -28), 38);
         
-        // Muros Maestros
-        float h = 9f;
-        CreateWall("Muro_Fondo", new Vector3(8, h/2, 55), new Vector3(50, h, 1), folderStructure);
-        CreateWall("Muro_Frontal_L", new Vector3(-8, h/2, -25), new Vector3(18, h, 1), folderStructure);
-        CreateWall("Muro_Frontal_R", new Vector3(25, h/2, -25), new Vector3(16, h, 1), folderStructure);
+        GameObject sun = new GameObject("Executive_Sun"); sun.transform.SetParent(fAtmosphere);
+        Light sl = sun.AddComponent<Light>(); sl.type = LightType.Directional; sl.intensity = 1.3f;
+        sun.transform.rotation = Quaternion.Euler(45, -35, 0);
 
-        // 3. ZONA DE COMEDOR (Luxury Dining)
-        // Mesas de Mármol con Sillas Premium
-        for(int x=0; x<3; x++) {
-            for(int z=0; z<4; z++) {
-                Vector3 posMesa = new Vector3(-5 + x * 12, 0, -10 + z * 14);
-                GenerarMesaMarmol(posMesa, folderDining);
-                GenerarSillaPremium(posMesa + Vector3.back * 1.8f, 0, folderDining);
-                GenerarSillaPremium(posMesa + Vector3.forward * 1.8f, 180, folderDining);
+        // 2. ARQUITECTURA (Suelo y Techo)
+        // Suelo de Mármol con zonificación técnica
+        CreateBlock("Suelo_Elite", new Vector3(0, -0.1f, 10), new Vector3(65, 0.2f, 100), colMarble, fStructure);
+        
+        // Techo Estructural (Slat Design)
+        for(int i=-15; i<15; i++) {
+            CreateBlock("Slat_" + i, new Vector3(i*2.2f, 10f, 10), new Vector3(0.4f, 0.4f, 100), colWallnut, fStructure);
+        }
+
+        // Muros con "Hornos de Luz" (Sin ventanas transparentes para evitar magenta)
+        float hW = 10f;
+        CreateWall("BackWall", new Vector3(0, hW/2, 60), new Vector3(65, hW, 1.5f), Color.white, fStructure);
+        for(int x=-1; x<=1; x+=2) {
+            // Ventanas sólidas pero elegantes
+            GameObject win = CreateBlock("LightPanel_" + x, new Vector3(x*18, 5f, 59.3f), new Vector3(12, 6, 0.2f), colSkyBlue, fStructure);
+            CreatePointLight(win.transform.position + Vector3.back * 2f, Color.white, 15, 1.5f, fAtmosphere);
+        }
+
+        // 3. COCINA INDUSTRIAL "SHOW KITCHEN" (Al fondo)
+        Vector3 kPos = new Vector3(-12, 0, 48);
+        GenerarBloqueCocinaElite(kPos, fKitchen);
+        
+        // Isla Central "The Monolith" (Expedición)
+        GenerarIslaExecutivePrep(new Vector3(0, 0, 38), 12, fKitchen);
+        
+        // Neveras de Cristal retroiluminadas
+        GenerarTorreFrioElite(new Vector3(18, 0, 48), fKitchen);
+
+        // 4. RECEPCIÓN Y ÁREA DE CLIENTES
+        // Barra Mostrador "Executive Reception"
+        GameObject bar = new GameObject("Reception_Hostess");
+        bar.transform.SetParent(fDining);
+        bar.transform.position = new Vector3(0, 0, -8);
+        CreateBlock("Body_Walnut", new Vector3(0, 0.62f, -8), new Vector3(18, 1.25f, 3.5f), colWallnut, bar.transform);
+        CreateBlock("Top_Marble", new Vector3(0, 1.25f, -8), new Vector3(18.5f, 0.15f, 4f), Color.white, bar.transform);
+        CreateBlock("Gold_Zocalo", new Vector3(0, 0.1f, -6), new Vector3(16, 0.2f, 0.1f), colBrushedGold, bar.transform);
+        
+        bar.AddComponent<DeliveryStation>();
+        CrearTextoInWorld(bar.transform, "E X E C U T I V E  H O S T", new Vector3(0, 1.5f, 0));
+
+        // Mesas de Diseño Minimalista
+        for(int r=0; r<2; r++) {
+            for(int c=-1; c<=1; c+=2) {
+                Vector3 posTable = new Vector3(c*15, 0, 15 - r*18);
+                GenerarTableSetElite(posTable, fDining);
             }
         }
 
-        // 4. BARRA DE SERVICIO & RECEPCIÓN
-        // Barra Principal
-        GameObject bar = CreateBlock("Barra_Recepcion", new Vector3(5, 0.6f, -24), new Vector3(12, 1.2f, 1.5f), new Color(0.15f, 0.15f, 0.18f), folderStaff);
-        bar.AddComponent<DeliveryStation>();
-        CrearTextoInWorld(bar.transform, "RECEPCIÓN / ENTREGA", new Vector3(0, 1.2f, 0));
-
-        // 5. ESTACIONES DE TRABAJO (Integradas en la arquitectura)
-        GameObject bin = CreateBlock("Basura_Inox", new Vector3(-14, 0.6f, -22), new Vector3(1, 1.2f, 1), Color.gray, folderStaff);
-        bin.AddComponent<TrashStation>();
-        CrearTextoInWorld(bin.transform, "DEPÓSITO", new Vector3(0, 1.2f, 0));
-
-        GameObject prep = CreateBlock("Mesa_Corte_Pub", new Vector3(25, 0.6f, -22), new Vector3(3, 1.2f, 2), Color.white, folderStaff);
-        prep.AddComponent<CuttingStation>();
-        CrearTextoInWorld(prep.transform, "PREPARACIÓN", new Vector3(0, 1.2f, 0));
-
-        // 6. AMBIENTACIÓN (Plantas y Columnas)
-        for(int i=0; i<4; i++) {
-            GenerarPlantaGrande_WithParent(new Vector3(-16, 0, -15 + i*20), folderAmbience);
-            GenerarPlantaGrande_WithParent(new Vector3(32, 0, -15 + i*20), folderAmbience);
+        // 5. ILUMINACIÓN "MOOD" CLUSTER
+        for(int i=0; i<6; i++) {
+             CreatePointLight(new Vector3((i%2==0?-1:1)*15, 7, 15 - (i/2)*18), new Color(1f, 0.9f, 0.7f), 15, 2f, fAtmosphere);
         }
 
-        Debug.Log(">>> RESTAURANTE PREMIUM GENERADO CON ÉXITO.");
+        Debug.Log(">>> SISTEMA ARCHITECTURAL ELITE CARGADO CON ÉXITO.");
         if (Application.isPlaying) ShowRound();
+    }
+
+    void GenerarTableSetElite(Vector3 pos, Transform parent)
+    {
+        GameObject set = new GameObject("TableSet_Elite");
+        set.transform.SetParent(parent);
+        set.transform.position = pos;
+
+        // Mesa
+        CreateBlock("Pillar", pos + Vector3.up * 0.45f, new Vector3(0.4f, 0.9f, 0.4f), new Color(0.82f, 0.65f, 0.35f), set.transform);
+        CreateBlock("Top", pos + Vector3.up * 0.95f, new Vector3(4.5f, 0.1f, 4.5f), Color.white, set.transform);
+
+        // Sillas de Diseño
+        for(int i=0; i<4; i++) {
+            float angle = i * 90 * Mathf.Deg2Rad;
+            Vector3 sPos = pos + new Vector3(Mathf.Sin(angle)*2.5f, 0, Mathf.Cos(angle)*2.5f);
+            GenerarSillaModerna(sPos, i*90, set.transform);
+        }
+    }
+
+    void GenerarSillaModerna(Vector3 pos, float rotY, Transform parent)
+    {
+        GameObject chair = new GameObject("Designer_Chair");
+        chair.transform.SetParent(parent);
+        chair.transform.position = pos;
+        chair.transform.rotation = Quaternion.Euler(0, rotY, 0);
+
+        Color colFabric = new Color(0.15f, 0.15f, 0.18f);
+        // Patas Oro
+        CreateBlock("Legs", pos + Vector3.up * 0.25f, new Vector3(1f, 0.1f, 1f), new Color(0.82f, 0.65f, 0.35f), chair.transform);
+        // Asiento y Respaldo
+        CreateBlock("Seat", pos + Vector3.up * 0.45f, new Vector3(1.2f, 0.3f, 1.2f), colFabric, chair.transform);
+        CreateBlock("Back", pos + Vector3.up * 1.1f + Vector3.forward * 0.45f, new Vector3(1.2f, 1.0f, 0.2f), colFabric, chair.transform);
+    }
+
+    void GenerarBloqueCocinaElite(Vector3 pos, Transform parent)
+    {
+        GameObject kitchen = new GameObject("Kitchen_HotLine");
+        kitchen.transform.SetParent(parent);
+        
+        // Bloque central de fuegos
+        GenerarCocinaPro(pos); 
+        // Campana Industrial de Acero Pulido
+        GenerarCampanaGigante(pos + Vector3.up * 1.5f);
+        // Detalles de pared (Azulejo o Panel Inox)
+        CreateBlock("Backsplash", pos + Vector3.forward * 1.3f + Vector3.up * 1f, new Vector3(8, 2.5f, 0.1f), new Color(0.7f, 0.7f, 0.72f), kitchen.transform);
+    }
+
+    void GenerarIslaExecutivePrep(Vector3 pos, float len, Transform parent)
+    {
+        // Una isla imponente de mármol con estantes metálicos abajo
+        GameObject isla = CreateBlock("Expo_Island", pos, new Vector3(len, 1.25f, 3.5f), new Color(0.12f, 0.12f, 0.12f), parent);
+        CreateBlock("Marble_Top", pos + Vector3.up * 0.65f, new Vector3(len + 0.2f, 0.15f, 3.8f), Color.white, isla.transform);
+        
+        // Tallas de corte integradas
+        for(int i=-1; i<=1; i++) {
+            GenerarTablaCortePro(pos + Vector3.right * i * (len/3f));
+        }
+        isla.AddComponent<CuttingStation>();
+    }
+
+    void GenerarSofaElite(Vector3 pos, float rotY, Transform parent)
+    {
+        GameObject sofa = new GameObject("Executive_Sofa");
+        sofa.transform.SetParent(parent);
+        sofa.transform.position = pos;
+        sofa.transform.rotation = Quaternion.Euler(0, rotY, 0);
+        
+        Color colLeather = new Color(0.15f, 0.1f, 0.08f); // Cuero oscuro
+        // Base Escultural
+        CreateBlock("Base", pos + Vector3.up * 0.2f, new Vector3(8, 0.4f, 3.5f), Color.black, sofa.transform);
+        // Cojines Proporcionados
+        CreateBlock("Cushions", pos + Vector3.up * 0.61f, new Vector3(7.8f, 0.45f, 3.2f), colLeather, sofa.transform);
+        // Respaldo Envolvente
+        CreateBlock("Backrest", pos + Vector3.up * 1.4f + Vector3.forward * 1.6f, new Vector3(7.8f, 1.5f, 0.5f), colLeather, sofa.transform);
+    }
+
+    void GenerarMesaMarmolElite(Vector3 pos, Transform parent)
+    {
+        GameObject mesa = new GameObject("Table_Mosaico");
+        mesa.transform.SetParent(parent);
+        mesa.transform.position = pos;
+        
+        // Pata central de latón (Oro)
+        CreateBlock("Pillar", pos + Vector3.up * 0.45f, new Vector3(0.5f, 0.9f, 0.5f), new Color(0.82f, 0.65f, 0.35f), mesa.transform);
+        // Sobre circular (Octógono visual) de Mármol Statuario
+        CreateBlock("Top", pos + Vector3.up * 0.95f, new Vector3(4.5f, 0.12f, 4.5f), Color.white, mesa.transform);
+    }
+
+    void GenerarSillaPremiumElite(Vector3 pos, float rotY, Transform parent)
+    {
+        GameObject chair = new GameObject("Chair_Elite");
+        chair.transform.SetParent(parent);
+        chair.transform.position = pos;
+        chair.transform.rotation = Quaternion.Euler(0, rotY, 0);
+        
+        Color colVelvet = new Color(0.12f, 0.2f, 0.15f); // Terciopelo verde oscuro executive
+        // Estructura patas oro
+        CreateBlock("Frame", pos + Vector3.up * 0.3f, new Vector3(1.2f, 0.1f, 1.2f), new Color(0.82f, 0.65f, 0.35f), chair.transform);
+        // Asiento
+        CreateBlock("Seat", pos + Vector3.up * 0.5f, new Vector3(1.25f, 0.35f, 1.25f), colVelvet, chair.transform);
+        // Respaldo bajo curvo
+        CreateBlock("Back", pos + Vector3.up * 1.1f + Vector3.forward * 0.5f, new Vector3(1.25f, 1.0f, 0.25f), colVelvet, chair.transform);
+    }
+
+    void GenerarTorreFrioElite(Vector3 pos, Transform parent)
+    {
+        GameObject fridge = CreateBlock("Elite_Wine_Cooler", pos + Vector3.up * 1.5f, new Vector3(4, 3.5f, 3), new Color(0.1f, 0.1f, 0.12f), parent);
+        // Cristal retroiluminado azul
+        CreateBlock("Display", pos + Vector3.up * 1.5f + Vector3.right * 2.05f, new Vector3(0.1f, 3.2f, 2.5f), new Color(0.4f, 0.6f, 1f, 0.3f), fridge.transform);
+    }
+
+    void GenerarRackIngredientesElite(Vector3 pos, Transform parent)
+    {
+        GameObject rack = CreateBlock("Ingredient_Rack", pos + Vector3.up * 1.5f, new Vector3(2.5f, 4.5f, 6f), new Color(0.15f, 0.15f, 0.15f), parent);
+        // Baldas de cristal
+        for(int i=0; i<4; i++) {
+            CreateBlock("Shelf", pos + Vector3.up * (i*1.1f + 0.5f), new Vector3(2.6f, 0.05f, 5.8f), Color.white, rack.transform);
+        }
+    }
+
+    void GenerarSofaModular(Vector3 pos, Transform parent)
+    {
+        GameObject sofa = new GameObject("Sofa_Premium");
+        sofa.transform.SetParent(parent);
+        sofa.transform.position = pos;
+        
+        Color colLeather = new Color(0.25f, 0.15f, 0.1f);
+        // Base y Asiento
+        CreateBlock("Base", pos + Vector3.up * 0.2f, new Vector3(6f, 0.4f, 3f), Color.black, sofa.transform);
+        CreateBlock("Seating", pos + Vector3.up * 0.5f, new Vector3(5.8f, 0.4f, 2.8f), colLeather, sofa.transform);
+        // Respaldo
+        CreateBlock("Backrest", pos + Vector3.up * 1.2f + Vector3.forward * 1.3f, new Vector3(5.8f, 1.2f, 0.4f), colLeather, sofa.transform);
+    }
+
+    void GenerarVentanalPremium(Vector3 pos, Transform parent)
+    {
+        CreateBlock("Frame_Top", pos + Vector3.up * 4.5f, new Vector3(40f, 0.3f, 0.3f), Color.black, parent);
+        GameObject glass = CreateBlock("Panoramic_Glass", pos, new Vector3(38f, 9f, 0.05f), new Color(0.7f, 0.9f, 1f, 0.15f), parent);
+        // Material transparente configurado mediante wrapper o lógica
+    }
+
+    void GenerarOrbitalBooth(Vector3 pos, Transform parent)
+    {
+        GameObject booth = new GameObject("OrbitalBooth");
+        booth.transform.SetParent(parent);
+        booth.transform.position = pos;
+        
+        // Base Escultural
+        CreateBlock("Base", pos + Vector3.up * 0.2f, new Vector3(2f, 0.4f, 10f), new Color(0.15f, 0.15f, 0.15f), booth.transform);
+        // Cojines Terciopelo Sage
+        CreateBlock("Seating", pos + Vector3.up * 0.5f, new Vector3(1.8f, 0.3f, 9.6f), new Color(0.44f, 0.50f, 0.44f), booth.transform);
+        // Respaldo Arquitectónico
+        CreateBlock("Backrest", pos + Vector3.up * 1.5f + Vector3.left * 0.8f, new Vector3(0.4f, 2.2f, 9.8f), new Color(0.12f, 0.12f, 0.12f), booth.transform);
+    }
+
+    void GenerarMesaEscultural(Vector3 pos, Transform parent)
+    {
+        GameObject mesa = new GameObject("Mesa_Escultural");
+        mesa.transform.SetParent(parent);
+        mesa.transform.position = pos;
+        
+        // Pata en V de latón
+        CreateBlock("Pillar_Brass", pos + Vector3.up * 0.45f, new Vector3(0.2f, 0.9f, 1.5f), new Color(0.82f, 0.65f, 0.35f), mesa.transform);
+        // Sobre de Ónix Negro
+        CreateBlock("Top_Onyx", pos + Vector3.up * 0.95f, new Vector3(3f, 0.1f, 3f), new Color(0.05f, 0.05f, 0.05f), mesa.transform);
+    }
+
+    void GenerarTheMonolithMesa(Vector3 pos, Transform parent)
+    {
+        GameObject table = new GameObject("Mesa_Monolithic");
+        table.transform.SetParent(parent);
+        table.transform.position = pos;
+        
+        // Tablero masivo de piedra
+        CreateBlock("Stone_Slab", pos + Vector3.up * 0.85f, new Vector3(5f, 0.25f, 15f), new Color(0.1f, 0.1f, 0.12f), table.transform);
+        // Patas cilíndricas de Oro Mate
+        for(int i=0; i<4; i++) {
+            Vector3 offset = new Vector3(i<2?1.8f:-1.8f, 0, i%2==0?6f:-6f);
+            GameObject leg = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            leg.transform.SetParent(table.transform);
+            leg.transform.position = pos + Vector3.up * 0.4f + offset;
+            leg.transform.localScale = new Vector3(0.4f, 0.45f, 0.4f);
+            leg.GetComponent<Renderer>().material.color = new Color(0.82f, 0.65f, 0.35f);
+        }
+        
+        // Sillas de Diseñador
+        for(int z=0; z<5; z++) {
+            GenerarSillaPremium(pos + new Vector3(3.2f, 0, -6f + z * 3f), 90, table.transform);
+            GenerarSillaPremium(pos + new Vector3(-3.2f, 0, -6f + z * 3f), 270, table.transform);
+        }
+    }
+
+    void GenerarNebulaLamp(Vector3 pos, Transform parent)
+    {
+        GameObject lamp = new GameObject("NebulaCluster");
+        lamp.transform.SetParent(parent);
+        lamp.transform.position = pos;
+        
+        // Esfera de cristal ahumado
+        GameObject orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        orb.transform.SetParent(lamp.transform);
+        orb.transform.position = pos;
+        orb.transform.localScale = Vector3.one * 1.5f;
+        Renderer r = orb.GetComponent<Renderer>();
+        r.material = new Material(Shader.Find("Standard"));
+        r.material.color = new Color(1, 1, 1, 0.2f);
+        r.material.SetFloat("_Mode", 3);
+        
+        // Luz cálida integrada
+        Light l = lamp.AddComponent<Light>();
+        l.type = LightType.Point;
+        l.color = new Color(1f, 0.9f, 0.7f);
+        l.range = 15f;
+        l.intensity = 2f;
+    }
+
+    void GenerarColumnaBiofilica(Vector3 pos, Transform parent)
+    {
+        GameObject col = CreateBlock("Columna_Eco", pos + Vector3.up * 5f, new Vector3(1.5f, 10f, 1.5f), new Color(0.12f, 0.12f, 0.12f), parent);
+        // Jardín vertical en la columna
+        for(int i=0; i<5; i++) {
+             GameObject foliage = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+             foliage.transform.SetParent(col.transform);
+             foliage.transform.localPosition = new Vector3(0, -0.4f + i*0.2f, 0.6f);
+             foliage.transform.localScale = new Vector3(1.2f, 0.4f, 0.8f);
+             foliage.GetComponent<Renderer>().material.color = new Color(0.1f, 0.4f, 0.15f);
+        }
+    }
+
+    void GenerarBancoCorridoModerno(Vector3 pos, Transform parent)
+    {
+        GameObject banco = new GameObject("Banco_Moderno");
+        banco.transform.SetParent(parent);
+        banco.transform.position = pos;
+        
+        // Base madera
+        CreateBlock("Base_Wood", pos + Vector3.up * 0.2f, new Vector3(1.5f, 0.4f, 8f), new Color(0.8f, 0.7f, 0.5f), banco.transform);
+        // Tapizado Verde Salvia
+        CreateBlock("Cojin", pos + Vector3.up * 0.5f, new Vector3(1.4f, 0.2f, 7.8f), new Color(0.44f, 0.50f, 0.44f), banco.transform);
+        // Respaldo
+        CreateBlock("Respaldo", pos + Vector3.up * 1.2f + Vector3.left * 0.6f, new Vector3(0.2f, 1.2f, 7.8f), new Color(0.44f, 0.50f, 0.44f), banco.transform);
+    }
+
+    void GenerarMesaSocial(Vector3 pos, Transform parent)
+    {
+        GameObject mesa = new GameObject("Mesa_Social_Larga");
+        mesa.transform.SetParent(parent);
+        mesa.transform.position = pos;
+        
+        // Tablero grueso de Roble
+        CreateBlock("Tablero", pos + Vector3.up * 0.9f, new Vector3(4f, 0.15f, 12f), new Color(0.85f, 0.72f, 0.52f), mesa.transform);
+        // Patas de acero negro en U
+        CreateBlock("Pata_1", pos + Vector3.up * 0.45f + Vector3.forward * 4.5f, new Vector3(3.5f, 0.9f, 0.2f), Color.black, mesa.transform);
+        CreateBlock("Pata_2", pos + Vector3.up * 0.45f + Vector3.back * 4.5f, new Vector3(3.5f, 0.9f, 0.2f), Color.black, mesa.transform);
+        
+        // Sillas alrededor
+        for(int i=0; i<4; i++) {
+            GenerarSillaDiseno_WithParent(pos + new Vector3(2.5f, 0.8f, -4.5f + i*3.0f), 90, Color.black, mesa.transform);
+            GenerarSillaDiseno_WithParent(pos + new Vector3(-2.5f, 0.8f, -4.5f + i*3.0f), 270, Color.black, mesa.transform);
+        }
     }
 
     void GenerarMesaMarmol(Vector3 pos, Transform parent)
@@ -1794,7 +1960,7 @@ public class KitchenBootstrap : MonoBehaviour
         mesa.transform.SetParent(parent);
         mesa.transform.position = pos;
         
-        // Pata central
+        // Pata central (Base dorada/negra)
         CreateBlock("Pata", pos + Vector3.up * 0.45f, new Vector3(0.3f, 0.9f, 0.3f), Color.black, mesa.transform);
         // Sobre de Mármol
         CreateBlock("Sobre", pos + Vector3.up * 0.95f, new Vector3(2.5f, 0.1f, 2.5f), new Color(0.95f, 0.95f, 0.95f), mesa.transform);
@@ -1802,15 +1968,50 @@ public class KitchenBootstrap : MonoBehaviour
 
     void GenerarSillaPremium(Vector3 pos, float rotY, Transform parent)
     {
-        GameObject silla = new GameObject("Silla_Velvet");
+        GameObject silla = new GameObject("Silla_Premium");
         silla.transform.SetParent(parent);
         silla.transform.position = pos;
         silla.transform.rotation = Quaternion.Euler(0, rotY, 0);
 
-        // Asiento
-        CreateBlock("Asiento", pos + Vector3.up * 0.4f, new Vector3(1f, 0.2f, 1f), new Color(0.4f, 0.1f, 0.1f), silla.transform);
-        // Respaldo
-        CreateBlock("Respaldo", pos + Vector3.up * 0.9f + silla.transform.forward * -0.4f, new Vector3(1f, 0.8f, 0.15f), new Color(0.4f, 0.1f, 0.1f), silla.transform);
+        // Asiento terciopelo
+        CreateBlock("Asiento", pos + Vector3.up * 0.4f, new Vector3(1f, 0.2f, 1f), new Color(0.44f, 0.50f, 0.44f), silla.transform);
+        // Respaldo curvo
+        CreateBlock("Respaldo", pos + Vector3.up * 1.0f + silla.transform.forward * -0.4f, new Vector3(1f, 1.0f, 0.15f), new Color(0.44f, 0.50f, 0.44f), silla.transform);
+    }
+
+    void GenerarLamparaColgante(Vector3 pos)
+    {
+        GameObject lamp = new GameObject("Lampara_Designer");
+        lamp.transform.SetParent(restauranteContainer.transform);
+        lamp.transform.position = pos;
+
+        // Cable fino
+        CreateBlock("Cable", pos + Vector3.up * 1.5f, new Vector3(0.05f, 3f, 0.05f), Color.black, lamp.transform);
+        // Tulipa latón
+        CreateBlock("Tulipa", pos, new Vector3(0.8f, 0.4f, 0.8f), new Color(0.72f, 0.58f, 0.32f), lamp.transform);
+        
+        // Punto de luz cálido
+        GameObject pl = new GameObject("Light");
+        pl.transform.SetParent(lamp.transform);
+        pl.transform.position = pos + Vector3.down * 0.2f;
+        Light l = pl.AddComponent<Light>();
+        l.type = LightType.Point;
+        l.color = new Color(1f, 0.9f, 0.7f);
+        l.range = 8f;
+        l.intensity = 1.5f;
+    }
+
+    void GenerarBowlFrutas(Vector3 pos)
+    {
+        GameObject bowl = CreateBlock("Bowl_Decor", pos, new Vector3(0.8f, 0.2f, 0.8f), Color.white);
+        // Algunas esferas de colores (frutas)
+        for(int i=0; i<3; i++) {
+            GameObject fruit = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            fruit.transform.SetParent(bowl.transform);
+            fruit.transform.localPosition = new Vector3(Random.Range(-0.2f, 0.2f), 0.3f, Random.Range(-0.2f, 0.2f));
+            fruit.transform.localScale = Vector3.one * 0.4f;
+            fruit.GetComponent<Renderer>().material.color = i==0 ? Color.red : (i==1 ? Color.green : Color.yellow);
+        }
     }
 
     public void ShowRound()
@@ -2254,8 +2455,20 @@ public class KitchenBootstrap : MonoBehaviour
         wall.transform.localScale = scale;
     }
 
+    void CreateWall(string name, Vector3 pos, Vector3 scale, Color color, Transform parent)
+    {
+        GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        wall.name = name;
+        wall.transform.SetParent(parent);
+        wall.transform.position = pos;
+        wall.transform.localScale = scale;
+        wall.GetComponent<Renderer>().material.color = color;
+    }
+
     void CreateGlassWindow(string name, Vector3 pos, Vector3 scale, Transform parent)
     {
+        // REEMPLAZO ROBUSTO: En lugar de un shader transparente que da Magenta, usamos un bloque sólido "Celeste Cielo"
+        // que simula una ventana con luz perfecta, ideal para presentaciones.
         GameObject win = GameObject.CreatePrimitive(PrimitiveType.Cube);
         win.name = name;
         win.transform.SetParent(parent);
@@ -2263,17 +2476,10 @@ public class KitchenBootstrap : MonoBehaviour
         win.transform.localScale = scale;
         
         Renderer r = win.GetComponent<Renderer>();
-        // Configurar material transparente
         r.material = new Material(Shader.Find("Standard")); 
-        r.material.color = new Color(0.7f, 0.9f, 1f, 0.3f); 
-        r.material.SetFloat("_Mode", 3); // Transparent
-        r.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-        r.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        r.material.SetInt("_ZWrite", 0);
-        r.material.DisableKeyword("_ALPHATEST_ON");
-        r.material.EnableKeyword("_ALPHABLEND_ON");
-        r.material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        r.material.renderQueue = 3000;
+        r.material.color = new Color(0.5f, 0.75f, 1f); // Azul cielo profesional
+        r.material.EnableKeyword("_EMISSION");
+        r.material.SetColor("_EmissionColor", new Color(0.2f, 0.3f, 0.4f)); // Efecto glow sutil
     }
 
     
