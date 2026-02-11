@@ -7,19 +7,128 @@ using System.Collections;
 using System.Collections.Generic;
 
 // ESTE SCRIPT HACE TODO: CARGA, MENU Y JUEGO.
+[ExecuteAlways]
 public class KitchenBootstrap : MonoBehaviour
 {
     public static KitchenBootstrap Instance;
 
-    private void Awake()
-    {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
-    }
-
     private GameObject menuCanvas;
     private GameObject currentMenuPanel;
-    public GameObject restauranteContainer; 
+
+    [Header("CONFIGURACIÓN DE DISEÑO")]
+    public bool autoGenerateInEditor = true;
+    
+    [Header("PREFABS (Opcional - Reemplaza los cubos)")]
+    public GameObject floorPrefab;
+    public GameObject wallPrefab;
+    public GameObject stovePrefab;
+    public GameObject sinkPrefab;
+    public GameObject prepTablePrefab;
+    public GameObject trashPrefab;
+    public GameObject deliveryPrefab;
+
+    [Header("REFERENCIAS DINÁMICAS")]
+    public GameObject restauranteContainer;
+
+    private void DestroySafe(GameObject obj)
+    {
+        if (obj == null) return;
+        if (Application.isPlaying) Destroy(obj);
+        else DestroyImmediate(obj);
+    }
+
+    [ContextMenu("🧹 Limpiar Escena")]
+    public void LimpiarCocina()
+    {
+        // Limpiar contenedores conocidos
+        string[] containers = { "COCINA_2D", "RESTAURANTE_GENERADO_AUTOMATICAMENTE", "CanvasMenu", "--- GAME_UI ---" };
+        foreach(var name in containers)
+        {
+            GameObject container = GameObject.Find(name);
+            if (container == null) continue;
+
+            // SEGURIDAD: Si este script está dentro del contenedor que vamos a borrar, lo sacamos primero
+            if (transform.IsChildOf(container.transform))
+            {
+                transform.SetParent(null);
+            }
+            
+            DestroySafe(container);
+        }
+        
+        Debug.Log(">>> ESCENA LIMPIA (Estructuras y UI retiradas)");
+    }
+
+    private void Awake()
+    {
+        if (Instance == null) {
+            Instance = this;
+            if (Application.isPlaying) DontDestroyOnLoad(gameObject);
+        }
+        else if (Instance != this) {
+            if (Application.isPlaying)
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
+
+        #if UNITY_EDITOR
+        if (!Application.isPlaying && autoGenerateInEditor) {
+            BuscarOReemplazarCocina();
+        }
+        #endif
+    }
+
+    private void OnEnable()
+    {
+        #if UNITY_EDITOR
+        if (!Application.isPlaying) {
+             BuscarOReemplazarCocina();
+        }
+        #endif
+    }
+
+    void BuscarOReemplazarCocina()
+    {
+        if (restauranteContainer != null) return;
+        
+        restauranteContainer = GameObject.Find("COCINA_2D");
+        // Solo generar si realmente no hay nada y el auto-generate está activo
+        if (restauranteContainer == null && autoGenerateInEditor) {
+            // Evitar recursividad si se llama durante la carga
+            if (GameObject.Find("COCINA_2D") != null) return;
+            GenerarCocina2D();
+        }
+    }
+
+    [ContextMenu("🔗 Buscar Estaciones en Escena")]
+    public void ConfigurarDesdeEscena()
+    {
+        Debug.Log(">>> ESCANEANDO ESCENA PARA VINCULAR LÓGICA MANUAL...");
+        // Esta función busca en la jerarquía objetos que ya tengan componentes de estación
+        // y se asegura de que estemos listos para jugar con ellos.
+        if (restauranteContainer == null) restauranteContainer = GameObject.Find("COCINA_2D");
+        
+        var stations = Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+        foreach(var s in stations) {
+            if (s is CuttingStation || s is DispenserStation || s is TrashStation) {
+                Debug.Log($"Viculada estación encontrada: {s.gameObject.name}");
+            }
+        }
+    }
+
+    [ContextMenu("✨ GENERAR COCINA (Base Architecture)")]
+    public void GenerarArquitecturaBase()
+    {
+        GenerarCocina2D_Internal(true);
+    }
+    
+    [ContextMenu("🚀 GENERAR TODO (Full Professional)")]
+    public void GenerarTodoFull()
+    {
+        GenerarCocina2D_Internal(false);
+    }
 
     // --- AUTO-EJECT (Asegura que el script corra sí o sí) ---
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -260,14 +369,15 @@ public class KitchenBootstrap : MonoBehaviour
 
     void MostrarMenuPrincipal()
     {
-        if (currentMenuPanel != null) Destroy(currentMenuPanel);
+        isGameActive = false; // Detener spawners al estar en el menú
+        if (this.currentMenuPanel != null) Destroy(this.currentMenuPanel);
 
         // 1. Fondo Corporativo (Azul noche profundo o Gris oscuro)
-        currentMenuPanel = CrearPanel(new Color(0.1f, 0.12f, 0.15f)); 
+        this.currentMenuPanel = CrearPanel(new Color(0.1f, 0.12f, 0.15f)); 
         
         // 2. HEADER - Título y Subtítulo
         GameObject headerContainer = new GameObject("Header");
-        headerContainer.transform.SetParent(currentMenuPanel.transform, false);
+        headerContainer.transform.SetParent(this.currentMenuPanel.transform, false);
         RectTransform rtHeader = headerContainer.AddComponent<RectTransform>();
         rtHeader.anchorMin = new Vector2(0.5f, 0.7f); rtHeader.anchorMax = new Vector2(0.5f, 0.9f);
         rtHeader.anchoredPosition = Vector2.zero; rtHeader.sizeDelta = new Vector2(800, 200);
@@ -281,7 +391,7 @@ public class KitchenBootstrap : MonoBehaviour
 
         // 3. CENTER - Botones
         GameObject buttonContainer = new GameObject("ButtonContainer");
-        buttonContainer.transform.SetParent(currentMenuPanel.transform, false);
+        buttonContainer.transform.SetParent(this.currentMenuPanel.transform, false);
         RectTransform rtContainer = buttonContainer.AddComponent<RectTransform>();
         // Anclar al centro de la pantalla
         rtContainer.anchorMin = new Vector2(0.5f, 0.5f); 
@@ -291,9 +401,7 @@ public class KitchenBootstrap : MonoBehaviour
 
         // --- OPCIÓN 1: INICIO DE JUEGO ---
         CrearBotonModerno(buttonContainer.transform, "INICIO DE JUEGO", 0, 100, new Color(0.2f, 0.6f, 0.3f), () => {
-            Destroy(menuCanvas); 
-            // ShowRound(); // Card game disabled
-            GenerarCocina2D(); // Start 2D Top-Down Game
+            EntrarAJuego();
         });
 
         // --- OPCIÓN 2: MANUAL DE INSTRUCCIONES ---
@@ -303,18 +411,44 @@ public class KitchenBootstrap : MonoBehaviour
         CrearBotonModerno(buttonContainer.transform, "CREAR USUARIO", 0, -100, new Color(0.5f, 0.3f, 0.6f), MostrarCrearUsuario);
         
         // Footer
-        GameObject footer = CrearTexto(currentMenuPanel.transform, "© 2026 Enterprise Solutions", 0, -300, 12, Color.gray);
+        GameObject footer = CrearTexto(this.currentMenuPanel.transform, "© 2026 Enterprise Solutions", 0, -300, 12, Color.gray);
         RectTransform rtFooter = footer.GetComponent<RectTransform>();
         rtFooter.anchorMin = new Vector2(0.5f, 0.05f); rtFooter.anchorMax = new Vector2(0.5f, 0.05f);
         rtFooter.anchoredPosition = Vector2.zero;
     }
 
+    void EntrarAJuego()
+    {
+        // Destruir el menú principal antes de entrar al juego
+        if (this.menuCanvas != null) DestroySafe(this.menuCanvas);
+
+        GameObject container = GameObject.Find("COCINA_2D");
+        if (container == null)
+        {
+            GenerarCocina2D();
+            container = GameObject.Find("COCINA_2D");
+        }
+        
+        restauranteContainer = container;
+        SetupCameraRealist(new Vector3(0, 18, -16), 42);
+        
+        // ASEGURAR JUGADOR Y ESTADO
+        if (Object.FindFirstObjectByType<PlayerController>() == null)
+        {
+            SpawnPlayerTopDown(new Vector3(0, 0.1f, -6.0f));
+        }
+        
+        isGameActive = true;
+        nextSpawnTime = Time.time + 2f;
+        Debug.Log(">>> EMPEZANDO JUEGO (Estado configurado)");
+    }
+
     void MostrarInstrucciones()
     {
-        if (currentMenuPanel != null) Destroy(currentMenuPanel);
-        currentMenuPanel = CrearPanel(new Color(0.15f, 0.2f, 0.25f)); // Azul acero
+        if (this.currentMenuPanel != null) Destroy(this.currentMenuPanel);
+        this.currentMenuPanel = CrearPanel(new Color(0.15f, 0.2f, 0.25f)); // Azul acero
 
-        CrearTexto(currentMenuPanel.transform, "MANUAL OPERATIVO", 0, 200, 50, Color.white);
+        CrearTexto(this.currentMenuPanel.transform, "MANUAL OPERATIVO", 0, 200, 50, Color.white);
 
         string manual = 
             "- PROTOCOLO DE ACIDEZ: Servir alimentos alcalinos (Pollo, Avena).\n\n" +
@@ -322,26 +456,26 @@ public class KitchenBootstrap : MonoBehaviour
             "- PROTOCOLO DEPORTIVO: Requerimiento de Potasio y Carbohidratos (Plátano, Pasta).\n\n" +
             "OBJETIVO: Maximizar satisfacción del cliente (100 pts) para evitar sanciones.";
 
-        GameObject txt = CrearTexto(currentMenuPanel.transform, manual, 0, 0, 24, new Color(0.9f, 0.9f, 0.9f));
+        GameObject txt = CrearTexto(this.currentMenuPanel.transform, manual, 0, 0, 24, new Color(0.9f, 0.9f, 0.9f));
         txt.GetComponent<RectTransform>().sizeDelta = new Vector2(900, 400); // Dar espacio para leer
 
-        CrearBotonModerno(currentMenuPanel.transform, "VOLVER AL MENÚ", 0, -200, new Color(0.6f, 0.2f, 0.2f), MostrarMenuPrincipal);
+        CrearBotonModerno(this.currentMenuPanel.transform, "VOLVER AL MENÚ", 0, -200, new Color(0.6f, 0.2f, 0.2f), MostrarMenuPrincipal);
     }
 
     void MostrarCrearUsuario()
     {
-        if (currentMenuPanel != null) Destroy(currentMenuPanel);
-        currentMenuPanel = CrearPanel(new Color(0.2f, 0.15f, 0.25f)); // Púrpura oscuro corporativo
+        if (this.currentMenuPanel != null) Destroy(this.currentMenuPanel);
+        this.currentMenuPanel = CrearPanel(new Color(0.2f, 0.15f, 0.25f)); // Púrpura oscuro corporativo
 
         // Header
-        GameObject header = CrearTexto(currentMenuPanel.transform, "REGISTRO DE PERSONAL", 0, 150, 50, Color.white);
+        GameObject header = CrearTexto(this.currentMenuPanel.transform, "REGISTRO DE PERSONAL", 0, 150, 50, Color.white);
         header.GetComponent<Text>().fontStyle = FontStyle.Bold;
         
-        CrearTexto(currentMenuPanel.transform, "Identificación del Chef Ejecutivo", 0, 100, 20, new Color(0.8f, 0.8f, 0.8f));
+        CrearTexto(this.currentMenuPanel.transform, "Identificación del Chef Ejecutivo", 0, 100, 20, new Color(0.8f, 0.8f, 0.8f));
 
         // -- INPUT FIELD CONTAINER --
         GameObject inputObj = new GameObject("InputField_Name");
-        inputObj.transform.SetParent(currentMenuPanel.transform, false);
+        inputObj.transform.SetParent(this.currentMenuPanel.transform, false);
         
         // Background Image for Input
         Image img = inputObj.AddComponent<Image>();
@@ -520,81 +654,92 @@ public class KitchenBootstrap : MonoBehaviour
 
     public void GenerarCocina2D()
     {
-        Debug.Log(">>> REESTABLECIENDO COCINA ULTRA-MODERNA DE ALTA GAMA... <<<<");
+        GenerarCocina2D_Internal(false);
+    }
 
-        string containerName = "COCINA_2D";
-        GameObject old = GameObject.Find(containerName);
-        if (old != null) Destroy(old);
+    private void GenerarCocina2D_Internal(bool soloArquitectura)
+    {
+        Debug.Log(soloArquitectura ? ">>> GENERANDO ARQUITECTURA... <<<<" : ">>> GENERANDO COCINA COMPLETA... <<<<");
 
-        restauranteContainer = new GameObject(containerName);
+        GameObject oldRoot = GameObject.Find("COCINA_2D");
+        if (oldRoot != null) DestroySafe(oldRoot);
         
+        GameObject root = new GameObject("COCINA_2D");
+        restauranteContainer = root;
+
+        // --- SUB-CARPETAS (Locales para no ensuciar el global) ---
+        Transform folderStructure = new GameObject("_Estructura").transform; folderStructure.SetParent(root.transform);
+        Transform folderZones = new GameObject("_Zonas_Trabajo").transform; folderZones.SetParent(root.transform);
+        Transform folderAppliances = new GameObject("_Electrodomesticos").transform; folderAppliances.transform.SetParent(root.transform);
+        Transform folderDecor = new GameObject("_Decoracion").transform; folderDecor.transform.SetParent(root.transform);
+        Transform folderLights = new GameObject("_Iluminacion").transform; folderLights.transform.SetParent(root.transform);
+
         // 1. CÁMARA & ILUMINACIÓN
         SetupCameraRealist(new Vector3(0, 18, -16), 42);
-        GenerarIluminacionCenital();
-        // Luces indirectas LED
-        CreatePointLight(new Vector3(-10, 5, 5), new Color(0.5f, 0.8f, 1f), 15, 0.5f);
-        CreatePointLight(new Vector3(10, 5, 5), new Color(1f, 0.9f, 0.7f), 15, 0.5f);
+        
+        GameObject sun = new GameObject("LuzGlobal"); sun.transform.SetParent(folderLights);
+        Light l = sun.AddComponent<Light>(); l.type = LightType.Directional; l.intensity = 1.2f;
+        sun.transform.rotation = Quaternion.Euler(50, -30, 0);
 
-        // 2. SUELO DE LUJO (Mármol Negro Pulido)
-        int width = 32;
-        int depth = 22;
-        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        floor.name = "SueloUltraModerno";
-        floor.transform.SetParent(restauranteContainer.transform);
-        floor.transform.localScale = new Vector3(width/10f, 1, depth/10f);
-        floor.GetComponent<Renderer>().material.color = new Color(0.05f, 0.05f, 0.07f);
+        CreatePointLight(new Vector3(-10, 5, 5), new Color(0.5f, 0.8f, 1f), 15, 0.5f, folderLights);
+        CreatePointLight(new Vector3(10, 5, 5), new Color(1f, 0.9f, 0.7f), 15, 0.5f, folderLights);
 
-        // 3. PAREDES DE DISEÑO
+        // 2. ARQUITECTURA
+        int width = 32; int depth = 22;
+        CreateBlock("SueloMaster", Vector3.zero, new Vector3(width, 0.1f, depth), new Color(0.05f, 0.05f, 0.07f), folderStructure);
+
         float wallH = 7f;
-        // Fondo: Muro de microcemento con grandes ventanales
-        CrearMuroRealista(new Vector3(0, wallH/2, 11), new Vector3(width, wallH, 0.5f), new Color(0.2f, 0.2f, 0.22f)); 
-        GenerarVentanalPanoramico(new Vector3(-9, wallH/2, 10.7f));
-        GenerarVentanalPanoramico(new Vector3(9, wallH/2, 10.7f));
+        CreateWall("MuroFondo", new Vector3(0, wallH/2, 11), new Vector3(width, wallH, 0.5f), folderStructure);
+        GenerarVentanalPanoramico(new Vector3(-9, wallH/2, 10.7f), folderStructure);
+        GenerarVentanalPanoramico(new Vector3(9, wallH/2, 10.7f), folderStructure);
+        GenerarMuroListones(new Vector3(-16, wallH/2, 0), depth, wallH, folderStructure); 
+        CrearMuroRealista(new Vector3(16, wallH/2, 0), new Vector3(0.5f, wallH, depth), new Color(0.1f, 0.1f, 0.12f), folderStructure);
 
-        // Lateral Izquierdo: Listones de madera verticales
-        GenerarMuroListones(new Vector3(-16, wallH/2, 0), depth, wallH);
-
-        // Lateral Derecho: Panelado oscuro mate
-        CrearMuroRealista(new Vector3(16, wallH/2, 0), new Vector3(0.5f, wallH, depth), new Color(0.1f, 0.1f, 0.12f));
-
-        // 4. MOBILIARIO "ELITE"
-
-        // --- LÍNEA TÉCNICA (FONDO) ---
-        GenerarEncimeraBicolor(new Vector3(-10, 0, 8), 8);
-        GenerarPlacaInduccion(new Vector3(-10, 0.6f, 8));
-        
-        GenerarEncimeraBicolor(new Vector3(10, 0, 8), 8);
-        GenerarFregaderoBicolor(new Vector3(10, 0, 8));
-
-        GenerarTorreHornos(new Vector3(-14, 0, 8));
-        GenerarNeveraAmericana(new Vector3(14, 0, 8));
-
-        // --- ISLA CENTRAL "WATERFALL" ---
-        GenerarIslaWaterfall(new Vector3(0, 0, 1), 9, 4.5f);
-        
-        // Iluminación lineal
-        GameObject lamp = CreateBlock("LinearLamp", new Vector3(0, 5, 1), new Vector3(7, 0.1f, 0.1f), Color.white);
-        CreatePointLight(new Vector3(0, 4.8f, 1), Color.white, 10, 1.2f);
-
-        // --- BARRA DE SERVICIO MINIMALISTA ---
-        GameObject barra = CreateBlock("BarraGlass", new Vector3(0, 0.6f, -7), new Vector3(14, 1.2f, 0.8f), new Color(0.1f, 0.1f, 0.1f));
-        CreateBlock("TopGlass", new Vector3(0, 1.25f, -7), new Vector3(14.5f, 0.05f, 1.2f), new Color(0.95f, 0.95f, 0.95f));
-        
-        for(int i=-2; i<=2; i++) {
-           GenerarSillaDiseno(new Vector3(i*2.5f, 0.8f, -8.5f), 180, new Color(0.7f, 0.6f, 0.2f));
+        if (soloArquitectura) {
+            Debug.Log(">>> ARQUITECTURA GENERADA.");
+            return;
         }
 
-        // 5. PERSONAJES (AJUSTADOS PARA INTERACCIÓN CERCANA)
-        SpawnPlayerTopDown(new Vector3(0, 0.1f, -6.0f)); 
+        // 3. ZONAS DE TRABAJO (Usando carpetas específicas)
+        GenerarEncimeraBicolor_WithParent(new Vector3(-10, 0, 8), 8, folderZones);
+        GenerarPlacaInduccion_WithParent(new Vector3(-10, 0, 8), folderZones);
         
-        // 6. INICIALIZAR SPAWNER AUTO
-        activeCustomers.Clear();
-        isGameActive = true;
-        nextSpawnTime = Time.time + 2f; // El primer cliente aparece pronto
+        GenerarEncimeraBicolor_WithParent(new Vector3(10, 0, 8), 8, folderZones);
+        GenerarFregaderoRealista_WithParent(new Vector3(10, 0, 8), folderZones); 
+        
+        // El fregadero ahora tiene un nombre predecible para buscarlo
+        GameObject faucet = GameObject.Find("GrifoCisne");
+        if(faucet != null) {
+            if (faucet.GetComponent<DispenserStation>() == null) {
+                DispenserStation ds = faucet.AddComponent<DispenserStation>();
+                ds.ingredientName = "Agua";
+            }
+            CrearTextoInWorld(faucet.transform, "AGUA", new Vector3(0, 1.2f, 0));
+        }
 
-        // Decoración
-        GenerarPlantaGrande(new Vector3(-14, 0, -9.5f));
-        GenerarPlantaGrande(new Vector3(14, 0, -9.5f));
+        GenerarIslaWaterfall_WithParent(new Vector3(0, 0, 1), 9, 4.5f, folderZones); 
+        GameObject cBoard = CreateBlock("TablaCorte_Interact", new Vector3(-2, 1.25f, 1), new Vector3(1.2f, 0.05f, 1.0f), Color.white, folderZones);
+        if (cBoard.GetComponent<CuttingStation>() == null) cBoard.AddComponent<CuttingStation>();
+        CrearTextoInWorld(cBoard.transform, "CORTE", new Vector3(0, 0.8f, 0));
+
+        GameObject bin = CreateBlock("Basura_Pro", new Vector3(-14, 0.6f, -9), new Vector3(0.8f, 1.2f, 0.8f), new Color(0.2f, 0.2f, 0.2f), folderZones);
+        if (bin.GetComponent<TrashStation>() == null) bin.AddComponent<TrashStation>();
+        CrearTextoInWorld(bin.transform, "BASURA", new Vector3(0, 1.2f, 0));
+
+        GameObject delivBar = CreateBlock("Entrega_Pro", new Vector3(-3, 0.6f, -7), new Vector3(8, 1.2f, 0.8f), new Color(0.1f, 0.1f, 0.1f), folderZones);
+        if (delivBar.GetComponent<DeliveryStation>() == null) delivBar.AddComponent<DeliveryStation>();
+        CrearTextoInWorld(delivBar.transform, "ENTREGA", new Vector3(0, 1.2f, -0.5f));
+
+        // 4. ELECTRODOMESTICOS
+        GenerarTorreHornos_WithParent(new Vector3(-14, 0, 8), folderAppliances);
+        GenerarNeveraAmericana_WithParent(new Vector3(14, 0, 8), folderAppliances);
+
+        // 5. DECORACIÓN
+        for(int i=-2; i<=2; i++) GenerarSillaDiseno_WithParent(new Vector3(i*2.5f, 0.8f, -8.5f), 180, new Color(0.7f, 0.6f, 0.2f), folderDecor);
+        GenerarPlantaGrande_WithParent(new Vector3(-14, 0, -10f), folderDecor);
+        GenerarPlantaGrande_WithParent(new Vector3(14, 0, -10f), folderDecor);
+
+        Debug.Log(">>> COCINA GENERADA COMPLETAMENTE SIN ERRORES.");
     }
 
     void GenerarIslaWaterfall(Vector3 pos, float w, float d)
@@ -629,7 +774,7 @@ public class KitchenBootstrap : MonoBehaviour
             // Crear el botón si no existe (Arriba a la Izquierda)
             CrearCanvas(); // Asegurar canvas
             interactionButton = new GameObject("Btn_TalkCustomer");
-            interactionButton.transform.SetParent(menuCanvas.transform, false);
+            interactionButton.transform.SetParent(this.menuCanvas.transform, false);
             
             Image img = interactionButton.AddComponent<Image>();
             img.color = new Color(0, 0, 0, 0.8f); // Fondo negro semitransparente
@@ -1099,12 +1244,9 @@ public class KitchenBootstrap : MonoBehaviour
         GenerarEncimeraBicolor(pos, 3);
         // Pila bajo encimera (Metalica oscura)
         CreateBlock("Pila", pos + Vector3.up * 0.63f, new Vector3(1.8f, 0.05f, 1.5f), new Color(0.3f, 0.3f, 0.3f));
-        // Grifo Negro Mate moderno
-        GameObject tap = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        tap.transform.position = pos + new Vector3(0, 1.0f, 0.8f);
-        tap.transform.localScale = new Vector3(0.1f, 0.8f, 0.1f);
-        tap.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.1f);
-        tap.transform.SetParent(restauranteContainer.transform);
+        
+        // Grifo Negro Mate moderno (Cuello curvo)
+        GenerarFregaderoRealista(pos + new Vector3(0, 0.65f, 0.8f));
     }
 
     void GenerarPlacaInduccion(Vector3 pos)
@@ -1459,10 +1601,24 @@ public class KitchenBootstrap : MonoBehaviour
         CreateBlock("Isla", pos, new Vector3(6f, 1.2f, 3f), new Color(0.85f, 0.85f, 0.9f)); // Superficie de trabajo blanca amplia
     }
 
+    // --- WRAPPERS PARA SOPORTE DE PADRES ESPECÍFICOS ---
+    void GenerarEncimeraBicolor_WithParent(Vector3 pos, float width, Transform p) { restauranteContainer = p.gameObject; GenerarEncimeraBicolor(pos, width); }
+    void GenerarPlacaInduccion_WithParent(Vector3 pos, Transform p) { restauranteContainer = p.gameObject; GenerarPlacaInduccion(pos); }
+    void GenerarFregaderoRealista_WithParent(Vector3 pos, Transform p) { restauranteContainer = p.gameObject; GenerarFregaderoRealista(pos); }
+    void GenerarIslaWaterfall_WithParent(Vector3 pos, float w, float d, Transform p) { restauranteContainer = p.gameObject; GenerarIslaWaterfall(pos, w, d); }
+    void GenerarTorreHornos_WithParent(Vector3 pos, Transform p) { restauranteContainer = p.gameObject; GenerarTorreHornos(pos); }
+    void GenerarNeveraAmericana_WithParent(Vector3 pos, Transform p) { restauranteContainer = p.gameObject; GenerarNeveraAmericana(pos); }
+    void GenerarSillaDiseno_WithParent(Vector3 pos, float angle, Color c, Transform p) { restauranteContainer = p.gameObject; GenerarSillaDiseno(pos, angle, c); }
+    void GenerarPlantaGrande_WithParent(Vector3 pos, Transform p) { restauranteContainer = p.gameObject; GenerarPlantaGrande(pos); }
+    void GenerarVentanalPanoramico(Vector3 pos, Transform p) { restauranteContainer = p.gameObject; GenerarVentanalPanoramico(pos); }
+    void GenerarMuroListones(Vector3 pos, float depth, float height, Transform p) { restauranteContainer = p.gameObject; GenerarMuroListones(pos, depth, height); }
+    void CrearMuroRealista(Vector3 pos, Vector3 scale, Color c, Transform p) { restauranteContainer = p.gameObject; CrearMuroRealista(pos, scale, c); }
+    void CreatePointLight(Vector3 pos, Color c, float range, float intensity, Transform p) { restauranteContainer = p.gameObject; CreatePointLight(pos, c, range, intensity); }
+
     // Utileria Visual
     void CreateArco(Transform parent, Vector3 center, float height, float width, Color c)
     {
-        // Simple representación visual
+        // Simple representación visual - Barra Horizontal sobre dos postes (representando el grifo ind)
         GameObject top = GameObject.CreatePrimitive(PrimitiveType.Cube);
         top.transform.SetParent(parent);
         top.transform.position = center + Vector3.up * height;
@@ -1477,14 +1633,29 @@ public class KitchenBootstrap : MonoBehaviour
     }
 
     // --- UTILS ---
-    GameObject CreateBlock(string name, Vector3 pos, Vector3 scale, Color c)
+    GameObject CreateBlock(string name, Vector3 pos, Vector3 scale, Color c, Transform forcedParent = null)
     {
-        GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        obj.name = name;
-        obj.transform.SetParent(restauranteContainer.transform);
+        GameObject obj;
+        // Si tenemos un prefab asignado para el 'Suelo' o 'Pared', lo usamos.
+        // Por ahora simplificado para usar los Prefabs de las cabeceras si coinciden nombres
+        GameObject prefabToUse = null;
+        if (name.Contains("Suelo") && floorPrefab != null) prefabToUse = floorPrefab;
+        if (name.Contains("Muro") && wallPrefab != null) prefabToUse = wallPrefab;
+
+        if (prefabToUse != null) {
+            obj = Instantiate(prefabToUse, pos, Quaternion.identity);
+            obj.name = name;
+        } else {
+            obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            obj.name = name;
+            obj.GetComponent<Renderer>().material.color = c;
+        }
+
+        Transform targetParent = (forcedParent != null) ? forcedParent : (restauranteContainer ? restauranteContainer.transform : null);
+        obj.transform.SetParent(targetParent);
         obj.transform.position = pos;
         obj.transform.localScale = scale;
-        obj.GetComponent<Renderer>().material.color = c;
+        
         return obj;
     }
 
@@ -1543,97 +1714,103 @@ public class KitchenBootstrap : MonoBehaviour
     // AQUI EMPIEZA LA GENERACION DEL RESTAURANTE (EL CODIGO ORIGINAL QUE YA FUNCIONABA)
     // ==============================================================================================
 
+    [ContextMenu("Generar Restaurante Original")]
+    [ContextMenu("✨ GENERAR RESTAURANTE PREMIUM")]
     public void GenerarRestaurante()
     {
-        Debug.Log(">>> GENERANDO RESTAURANTE... <<<<");
+        Debug.Log(">>> TRANSFORMANDO RESTAURANTE A NIVEL PREMIUM... <<<<");
 
-        string containerName = "RESTAURANTE_GENERADO_AUTOMATICAMENTE";
+        GameObject oldRoot = GameObject.Find("RESTAURANTE_ESTRUCTURA");
+        if (oldRoot != null) DestroySafe(oldRoot);
         
-        GameObject old = GameObject.Find(containerName);
-        if (old != null) Destroy(old);
+        GameObject root = new GameObject("RESTAURANTE_ESTRUCTURA");
+        restauranteContainer = root;
 
-        // Assign to the public field so the Editor script can see it
-        restauranteContainer = new GameObject(containerName);
-        GameObject container = restauranteContainer; // Local reference for existing code compatibility
-        container.transform.position = Vector3.zero;
+        // --- SUB-CARPETAS ---
+        Transform folderStructure = new GameObject("_Arquitectura").transform; folderStructure.SetParent(root.transform);
+        Transform folderDining = new GameObject("_Sala_Comedor").transform; folderDining.SetParent(root.transform);
+        Transform folderStaff = new GameObject("_Zonas_Privadas").transform; folderStaff.transform.SetParent(root.transform);
+        Transform folderAmbience = new GameObject("_Ambientacion").transform; folderAmbience.SetParent(root.transform);
 
-        // 1. Cámara y Luz
-        if (Camera.main == null)
-        {
-            GameObject camObj = new GameObject("Main Camera");
-            camObj.transform.SetParent(container.transform);
-            camObj.AddComponent<Camera>();
-            camObj.transform.position = new Vector3(0, 45, -45);
-            camObj.transform.rotation = Quaternion.Euler(50, 0, 0);
-            camObj.tag = "MainCamera";
-        }
-        else // Si ya existe (del menú), la recolocamos
-        {
-            Camera.main.transform.SetParent(container.transform);
-            Camera.main.transform.position = new Vector3(0, 45, -45);
-            Camera.main.transform.rotation = Quaternion.Euler(50, 0, 0);
-        }
+        // 1. ILUMINACIÓN & CÁMARA
+        SetupCameraRealist(new Vector3(0, 15, -20), 45);
+        GameObject sun = new GameObject("Luz_Ambiente"); sun.transform.SetParent(folderAmbience);
+        Light l = sun.AddComponent<Light>(); l.type = LightType.Directional; l.intensity = 1.1f;
+        sun.transform.rotation = Quaternion.Euler(45, -45, 0);
 
-        GameObject lightObj = new GameObject("Luz");
-        lightObj.transform.SetParent(container.transform);
-        Light l = lightObj.AddComponent<Light>(); l.type = LightType.Directional;
-        lightObj.transform.rotation = Quaternion.Euler(50, -30, 0);
+        // Luces puntuales decorativas
+        CreatePointLight(new Vector3(-5, 6, -5), new Color(1f, 0.9f, 0.7f), 15, 0.8f, folderAmbience);
+        CreatePointLight(new Vector3(15, 6, -5), new Color(1f, 0.9f, 0.7f), 15, 0.8f, folderAmbience);
 
-        // 2. SUELO GENERAL Y ZONIFICACIÓN
-        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        floor.name = "Suelo_Principal";
-        floor.transform.SetParent(container.transform);
-        floor.transform.localScale = new Vector3(10, 1, 10.5f);
-        floor.GetComponent<Renderer>().material.color = new Color(0.1f, 0.1f, 0.12f);
-
-        // Alfombra de Lujo en Comedor (Desplazada hacia atrás)
-        GameObject rug = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        rug.name = "Alfombra_Comedor"; rug.transform.SetParent(container.transform);
-        rug.transform.position = new Vector3(0, 0.05f, -27); rug.transform.localScale = new Vector3(5, 1, 3.5f);
-        rug.GetComponent<Renderer>().material.color = new Color(0.3f, 0.1f, 0.1f);
-
-        // 3. MUROS EXTERIORES PANORÁMICOS
-        // Muro de Fondo (Sólido)
-        CreateWall("Muro_Fondo", new Vector3(0, 4, 55), new Vector3(65, 8, 1), container.transform);
+        // 2. ARQUITECTURA (Suelo y Paredes)
+        // Suelo Principal: Moqueta Azul Noche Profundo
+        CreateBlock("Suelo_Master", new Vector3(8, -0.05f, 15), new Vector3(50, 0.1f, 80), new Color(0.1f, 0.12f, 0.15f), folderStructure);
         
-        // Muros Frontales
-        CreateWall("Muro_Frontal_L", new Vector3(-18, 4, -50), new Vector3(28, 8, 1), container.transform);
-        CreateWall("Muro_Frontal_R", new Vector3(18, 4, -50), new Vector3(28, 8, 1), container.transform);
-        CreateWall("Muro_Frontal_Top", new Vector3(0, 6.5f, -50), new Vector3(8, 3, 1), container.transform);
-        // CreateDoor("Puerta_Principal", new Vector3(0, 2.5f, -50.1f), new Vector3(8.5f, 5, 0.25f), new Color(0.4f, 0.2f, 0.1f), container.transform);
+        // Muros Maestros
+        float h = 9f;
+        CreateWall("Muro_Fondo", new Vector3(8, h/2, 55), new Vector3(50, h, 1), folderStructure);
+        CreateWall("Muro_Frontal_L", new Vector3(-8, h/2, -25), new Vector3(18, h, 1), folderStructure);
+        CreateWall("Muro_Frontal_R", new Vector3(25, h/2, -25), new Vector3(16, h, 1), folderStructure);
 
-        // MUROS LATERALES CON VENTANALES PANORÁMICOS
-        float[] sideX = { -32f, 32f };
-        foreach(float x in sideX) {
-            string sideName = x < 0 ? "Izq" : "Der";
-            // Zócalo inferior
-            CreateWall("Zocalo_" + sideName, new Vector3(x, 1f, 2.25f), new Vector3(1, 2, 104.5f), container.transform);
-            // Parte superior
-            CreateWall("Dintel_" + sideName, new Vector3(x, 7.5f, 2.25f), new Vector3(1, 1, 104.5f), container.transform);
-            
-            // Pilares y Cristal
-            for(int i=0; i<6; i++) {
-                float zPillar = -50 + (i * 20.9f);
-                CreateWall("Pilar_" + sideName + "_" + i, new Vector3(x, 4.5f, zPillar), new Vector3(1.1f, 5f, 1.5f), container.transform);
-                if(i < 5) {
-                    float zWin = zPillar + 10.45f;
-                    CreateGlassWindow("Ventana_" + sideName + "_" + i, new Vector3(x, 4.5f, zWin), new Vector3(0.2f, 5f, 19.4f), container.transform);
-                }
+        // 3. ZONA DE COMEDOR (Luxury Dining)
+        // Mesas de Mármol con Sillas Premium
+        for(int x=0; x<3; x++) {
+            for(int z=0; z<4; z++) {
+                Vector3 posMesa = new Vector3(-5 + x * 12, 0, -10 + z * 14);
+                GenerarMesaMarmol(posMesa, folderDining);
+                GenerarSillaPremium(posMesa + Vector3.back * 1.8f, 0, folderDining);
+                GenerarSillaPremium(posMesa + Vector3.forward * 1.8f, 180, folderDining);
             }
         }
 
-        // Suelo Exterior (Para que se vea algo por las ventanas)
-        GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        ground.name = "Exterior_Ground"; ground.transform.position = new Vector3(0, -0.1f, 0);
-        ground.transform.localScale = new Vector3(20, 1, 20); ground.GetComponent<Renderer>().material.color = new Color(0.2f, 0.3f, 0.2f);
+        // 4. BARRA DE SERVICIO & RECEPCIÓN
+        // Barra Principal
+        GameObject bar = CreateBlock("Barra_Recepcion", new Vector3(5, 0.6f, -24), new Vector3(12, 1.2f, 1.5f), new Color(0.15f, 0.15f, 0.18f), folderStaff);
+        bar.AddComponent<DeliveryStation>();
+        CrearTextoInWorld(bar.transform, "RECEPCIÓN / ENTREGA", new Vector3(0, 1.2f, 0));
 
+        // 5. ESTACIONES DE TRABAJO (Integradas en la arquitectura)
+        GameObject bin = CreateBlock("Basura_Inox", new Vector3(-14, 0.6f, -22), new Vector3(1, 1.2f, 1), Color.gray, folderStaff);
+        bin.AddComponent<TrashStation>();
+        CrearTextoInWorld(bin.transform, "DEPÓSITO", new Vector3(0, 1.2f, 0));
 
-        // 4. BAÑO REAL Y BONITO (A la izquierda - TOTALMENTE CERRADO)
-        GameObject bathroom = new GameObject("Area_Baño");
-        bathroom.transform.SetParent(container.transform);
+        GameObject prep = CreateBlock("Mesa_Corte_Pub", new Vector3(25, 0.6f, -22), new Vector3(3, 1.2f, 2), Color.white, folderStaff);
+        prep.AddComponent<CuttingStation>();
+        CrearTextoInWorld(prep.transform, "PREPARACIÓN", new Vector3(0, 1.2f, 0));
+
+        // 6. AMBIENTACIÓN (Plantas y Columnas)
+        for(int i=0; i<4; i++) {
+            GenerarPlantaGrande_WithParent(new Vector3(-16, 0, -15 + i*20), folderAmbience);
+            GenerarPlantaGrande_WithParent(new Vector3(32, 0, -15 + i*20), folderAmbience);
+        }
+
+        Debug.Log(">>> RESTAURANTE PREMIUM GENERADO CON ÉXITO.");
+        if (Application.isPlaying) ShowRound();
+    }
+
+    void GenerarMesaMarmol(Vector3 pos, Transform parent)
+    {
+        GameObject mesa = new GameObject("Mesa_Marmol");
+        mesa.transform.SetParent(parent);
+        mesa.transform.position = pos;
         
-        // Game Loop
-        ShowRound();
+        // Pata central
+        CreateBlock("Pata", pos + Vector3.up * 0.45f, new Vector3(0.3f, 0.9f, 0.3f), Color.black, mesa.transform);
+        // Sobre de Mármol
+        CreateBlock("Sobre", pos + Vector3.up * 0.95f, new Vector3(2.5f, 0.1f, 2.5f), new Color(0.95f, 0.95f, 0.95f), mesa.transform);
+    }
+
+    void GenerarSillaPremium(Vector3 pos, float rotY, Transform parent)
+    {
+        GameObject silla = new GameObject("Silla_Velvet");
+        silla.transform.SetParent(parent);
+        silla.transform.position = pos;
+        silla.transform.rotation = Quaternion.Euler(0, rotY, 0);
+
+        // Asiento
+        CreateBlock("Asiento", pos + Vector3.up * 0.4f, new Vector3(1f, 0.2f, 1f), new Color(0.4f, 0.1f, 0.1f), silla.transform);
+        // Respaldo
+        CreateBlock("Respaldo", pos + Vector3.up * 0.9f + silla.transform.forward * -0.4f, new Vector3(1f, 0.8f, 0.15f), new Color(0.4f, 0.1f, 0.1f), silla.transform);
     }
 
     public void ShowRound()
@@ -1965,15 +2142,15 @@ public class KitchenBootstrap : MonoBehaviour
 
     void CrearCanvas()
     {
-        if(menuCanvas == null) {
-            menuCanvas = new GameObject("CanvasMenu");
-            Canvas c = menuCanvas.AddComponent<Canvas>();
+        if(this.menuCanvas == null) {
+            this.menuCanvas = new GameObject("CanvasMenu");
+            Canvas c = this.menuCanvas.AddComponent<Canvas>();
             c.renderMode = RenderMode.ScreenSpaceOverlay;
-            CanvasScaler scaler = menuCanvas.AddComponent<CanvasScaler>();
+            CanvasScaler scaler = this.menuCanvas.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
             scaler.matchWidthOrHeight = 0.5f;
-            menuCanvas.AddComponent<GraphicRaycaster>();
+            this.menuCanvas.AddComponent<GraphicRaycaster>();
             
             // Asegurar que se ve encima de todo
             c.sortingOrder = 999;
@@ -1992,8 +2169,9 @@ public class KitchenBootstrap : MonoBehaviour
 
     GameObject CrearPanel(Color c, Sprite sprite = null)
     {
+        CrearCanvas(); // Asegurar que el canvas existe antes de intentar ser hijo de él
         GameObject p = new GameObject("Panel");
-        p.transform.SetParent(menuCanvas.transform, false);
+        p.transform.SetParent(this.menuCanvas.transform, false);
         RectTransform r = p.AddComponent<RectTransform>();
         r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.sizeDelta = Vector2.zero;
         
