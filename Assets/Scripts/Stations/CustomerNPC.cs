@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class CustomerNPC : MonoBehaviour, IInteractable
 {
-    // private bool hasInteracted = false;
-
     private void Start()
     {
         // Añadir un Collider tipo Trigger para detectar cercanía si no tiene uno
@@ -53,11 +51,23 @@ public class CustomerNPC : MonoBehaviour, IInteractable
 
         Debug.Log("Iniciando conversación con cliente...");
         
-        // Ocultar el prompt al iniciar la charla
         if (KitchenBootstrap.Instance != null)
         {
+            // Marcamos este cliente como el que está siendo atendido
+            KitchenBootstrap.Instance.currentCustomerServed = this;
             KitchenBootstrap.Instance.ToggleInteractionPrompt(false);
             KitchenBootstrap.Instance.ShowRound();
         }
+    }
+
+    public void SatisfyAndLeave()
+    {
+        Debug.Log("Cliente satisfecho, retirando NPC...");
+        // Notificar al manager para liberar el hueco
+        if (KitchenBootstrap.Instance != null)
+        {
+            KitchenBootstrap.Instance.OnCustomerLeft(gameObject);
+        }
+        Destroy(gameObject);
     }
 }

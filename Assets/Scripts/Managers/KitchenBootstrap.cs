@@ -40,6 +40,13 @@ public class KitchenBootstrap : MonoBehaviour
     private int consecutiveMediums;
     private List<Scenario> scenarios;
 
+    // --- NUEVO SISTEMA DE CLIENTES AUTO ---
+    public CustomerNPC currentCustomerServed;
+    private List<GameObject> activeCustomers = new List<GameObject>();
+    private float nextSpawnTime;
+    private const float SPAWN_INTERVAL = 8f; // Segundos entre clientes
+    private bool isGameActive = false;
+
     private void Start()
     {
         // Solo ejecutar lógica de juego si estamos dando al Play
@@ -390,6 +397,55 @@ public class KitchenBootstrap : MonoBehaviour
 
         CrearBotonModerno(currentMenuPanel.transform, "ATRAS", 0, -160, new Color(0.6f, 0.2f, 0.2f), MostrarMenuPrincipal);
     }
+    
+    private void Update()
+    {
+        // Lógica de aparición de clientes automática
+        if (isGameActive && activeCustomers.Count < 5)
+        {
+            if (Time.time >= nextSpawnTime)
+            {
+                SpawnAutomaticCustomer();
+                nextSpawnTime = Time.time + SPAWN_INTERVAL;
+            }
+        }
+    }
+
+    void SpawnAutomaticCustomer()
+    {
+        // Posiciones de los taburetes (donde se sientan los clientes)
+        float[] xPositions = { -5f, -2.5f, 0f, 2.5f, 5f };
+        
+        // Buscar un hueco libre
+        foreach (float x in xPositions)
+        {
+            Vector3 pos = new Vector3(x, 0.1f, -8.0f);
+            bool occupied = false;
+            foreach (GameObject c in activeCustomers)
+            {
+                if (c != null && Vector3.Distance(c.transform.position, pos) < 1f)
+                {
+                    occupied = true;
+                    break;
+                }
+            }
+
+            if (!occupied)
+            {
+                SpawnCustomerNPC(pos);
+                Debug.Log($"Nuevo cliente aparecido en X: {x}");
+                break; 
+            }
+        }
+    }
+
+    public void OnCustomerLeft(GameObject customer)
+    {
+        if (activeCustomers.Contains(customer))
+        {
+            activeCustomers.Remove(customer);
+        }
+    }
 
     void CrearBotonModerno(Transform parent, string texto, float x, float y, Color colorBase, UnityEngine.Events.UnityAction accion)
     {
@@ -464,7 +520,7 @@ public class KitchenBootstrap : MonoBehaviour
 
     public void GenerarCocina2D()
     {
-        Debug.Log(">>> GENERANDO COCINA ULTRA-MODERNA DE ALTA GAMA... <<<<");
+        Debug.Log(">>> REESTABLECIENDO COCINA ULTRA-MODERNA DE ALTA GAMA... <<<<");
 
         string containerName = "COCINA_2D";
         GameObject old = GameObject.Find(containerName);
@@ -472,7 +528,7 @@ public class KitchenBootstrap : MonoBehaviour
 
         restauranteContainer = new GameObject(containerName);
         
-        // 1. CÁMARA & ILUMINACIÓN DRAMÁTICA
+        // 1. CÁMARA & ILUMINACIÓN
         SetupCameraRealist(new Vector3(0, 18, -16), 42);
         GenerarIluminacionCenital();
         // Luces indirectas LED
@@ -521,18 +577,20 @@ public class KitchenBootstrap : MonoBehaviour
         CreatePointLight(new Vector3(0, 4.8f, 1), Color.white, 10, 1.2f);
 
         // --- BARRA DE SERVICIO MINIMALISTA ---
-        GameObject barra = CreateBlock("BarraGlass", new Vector3(0, 0.6f, -7), new Vector3(14, 1.2f, 0.8f), new Color(0.05f, 0.05f, 0.05f));
-        CreateBlock("TopGlass", new Vector3(0, 1.25f, -7), new Vector3(14.5f, 0.05f, 1.2f), new Color(0.1f, 0.1f, 0.1f, 0.8f));
+        GameObject barra = CreateBlock("BarraGlass", new Vector3(0, 0.6f, -7), new Vector3(14, 1.2f, 0.8f), new Color(0.1f, 0.1f, 0.1f));
+        CreateBlock("TopGlass", new Vector3(0, 1.25f, -7), new Vector3(14.5f, 0.05f, 1.2f), new Color(0.95f, 0.95f, 0.95f));
         
         for(int i=-2; i<=2; i++) {
            GenerarSillaDiseno(new Vector3(i*2.5f, 0.8f, -8.5f), 180, new Color(0.7f, 0.6f, 0.2f));
         }
 
-        // 5. JUGADOR
-        SpawnPlayerTopDown(new Vector3(0, 0.1f, -2.5f));
+        // 5. PERSONAJES (AJUSTADOS PARA INTERACCIÓN CERCANA)
+        SpawnPlayerTopDown(new Vector3(0, 0.1f, -6.0f)); 
         
-        // 6. CLIENTE Interactivo
-        SpawnCustomerNPC(new Vector3(0, 0.1f, -9.5f));
+        // 6. INICIALIZAR SPAWNER AUTO
+        activeCustomers.Clear();
+        isGameActive = true;
+        nextSpawnTime = Time.time + 2f; // El primer cliente aparece pronto
 
         // Decoración
         GenerarPlantaGrande(new Vector3(-14, 0, -9.5f));
@@ -550,12 +608,15 @@ public class KitchenBootstrap : MonoBehaviour
 
     void GenerarMuroListones(Vector3 pos, float depth, float height)
     {
+        // Fondo oscuro
         CreateBlock("WallBase", pos, new Vector3(0.2f, height, depth), new Color(0.1f, 0.1f, 0.1f));
+        // Listones de madera
         float spacing = 0.4f;
         for(float z = -depth/2 + 0.2f; z < depth/2; z += spacing) {
             CreateBlock("Liston", pos + new Vector3(0.15f, 0, z), new Vector3(0.1f, height, 0.15f), new Color(0.45f, 0.3f, 0.15f));
         }
     }
+
 
 
     // --- UI INTERACTION PROMPT ---
@@ -603,6 +664,7 @@ public class KitchenBootstrap : MonoBehaviour
         npc.name = "CustomerNPC";
         npc.transform.SetParent(restauranteContainer.transform);
         npc.transform.position = pos;
+        activeCustomers.Add(npc);
         npc.GetComponent<Renderer>().material.color = Color.yellow; // Distinto al player
         
         // Visual: Sombrero o detalle
@@ -1861,6 +1923,13 @@ public class KitchenBootstrap : MonoBehaviour
 
     void ShowFeedback(int score)
     {
+        // Liberar al cliente si la respuesta fue aceptable (para que deje hueco al irse)
+        if (score >= 50 && currentCustomerServed != null)
+        {
+            currentCustomerServed.SatisfyAndLeave();
+        }
+        currentCustomerServed = null;
+
         if(gamePanel != null) Destroy(gamePanel);
         // Fondo resultado
         gamePanel = CrearPanel(score == 100 ? new Color(0.2f, 0.6f, 0.2f) : (score == 50 ? new Color(0.8f, 0.8f, 0.2f) : new Color(0.8f, 0.2f, 0.2f)));
@@ -1872,7 +1941,11 @@ public class KitchenBootstrap : MonoBehaviour
 
         CrearTexto(gamePanel.transform, msg, 0, 50, 60, Color.white);
         
-        CrearBoton(gamePanel.transform, "SIGUIENTE PLATO >>", 0, -100, Color.white, ShowRound);
+        CrearBoton(gamePanel.transform, "SIGUIENTE RETO >>", 0, -100, Color.white, () => {
+             // Al dar a siguiente, quitamos el feedback y mostramos otra pregunta directamente
+             if(gamePanel != null) Destroy(gamePanel);
+             ShowRound();
+        });
     }
 
     void ShowGameOver(string reason)
