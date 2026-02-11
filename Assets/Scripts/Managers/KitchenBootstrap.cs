@@ -1654,12 +1654,28 @@ public class KitchenBootstrap : MonoBehaviour
         optKRect.anchorMax = new Vector2(0.95f, 0.45f); 
         optKRect.offsetMin = Vector2.zero; optKRect.offsetMax = Vector2.zero;
 
-        // Opcion A
-        CrearCartaOpcion(optionsArea.transform, 0, "A", current.optionA_Text, current.optionA_Image, () => CheckAnswer(current.optionA_Score));
-        // Opcion B
-        CrearCartaOpcion(optionsArea.transform, 1, "B", current.optionB_Text, current.optionB_Image, () => CheckAnswer(current.optionB_Score));
-        // Opcion C
-        CrearCartaOpcion(optionsArea.transform, 2, "C", current.optionC_Text, current.optionC_Image, () => CheckAnswer(current.optionC_Score));
+        // --- SISTEMA DE ALEATORIEDAD ---
+        // Creamos una lista con las 3 opciones
+        List<OptionDataHelper> choices = new List<OptionDataHelper>() {
+            new OptionDataHelper { text = current.optionA_Text, image = current.optionA_Image, score = current.optionA_Score },
+            new OptionDataHelper { text = current.optionB_Text, image = current.optionB_Image, score = current.optionB_Score },
+            new OptionDataHelper { text = current.optionC_Text, image = current.optionC_Image, score = current.optionC_Score }
+        };
+
+        // Barajamos la lista (Shuffle)
+        for (int i = 0; i < choices.Count; i++) {
+            OptionDataHelper temp = choices[i];
+            int randomIndex = Random.Range(i, choices.Count);
+            choices[i] = choices[randomIndex];
+            choices[randomIndex] = temp;
+        }
+
+        // Generamos las cartas en orden aleatorio
+        string[] labels = { "A", "B", "C" };
+        for (int i = 0; i < choices.Count; i++) {
+            OptionDataHelper choice = choices[i];
+            CrearCartaOpcion(optionsArea.transform, i, labels[i], choice.text, choice.image, () => CheckAnswer(choice.score));
+        }
 
         // --- BOTÓN SALIR (X) ---
         // Botón pequeño en la esquina superior derecha para cerrar la pregunta
@@ -2055,4 +2071,11 @@ public class Scenario
     public string optionC_Text;
     public string optionC_Image;
     public int optionC_Score;
+}
+
+public struct OptionDataHelper
+{
+    public string text;
+    public string image;
+    public int score;
 }
