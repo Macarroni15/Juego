@@ -464,7 +464,7 @@ public class KitchenBootstrap : MonoBehaviour
 
     public void GenerarCocina2D()
     {
-        Debug.Log(">>> GENERANDO COCINA REALISTA DE ALTO DETALLE... <<<<");
+        Debug.Log(">>> GENERANDO COCINA ULTRA-MODERNA DE ALTA GAMA... <<<<");
 
         string containerName = "COCINA_2D";
         GameObject old = GameObject.Find(containerName);
@@ -472,49 +472,91 @@ public class KitchenBootstrap : MonoBehaviour
 
         restauranteContainer = new GameObject(containerName);
         
-        // 1. CÁMARA & LUZ (VISTA DE LUJO)
-        SetupCameraRealist(new Vector3(0, 15, -12), 40);
-        
-        // Luces puntuales para realismo (sombras y brillos)
+        // 1. CÁMARA & ILUMINACIÓN DRAMÁTICA
+        SetupCameraRealist(new Vector3(0, 18, -16), 42);
         GenerarIluminacionCenital();
+        // Luces indirectas LED
+        CreatePointLight(new Vector3(-10, 5, 5), new Color(0.5f, 0.8f, 1f), 15, 0.5f);
+        CreatePointLight(new Vector3(10, 5, 5), new Color(1f, 0.9f, 0.7f), 15, 0.5f);
 
-        // 2. SUELO DE PARQUÉ DE ROBLE (Texturizado con detalle)
-        CrearSueloParqueRealista(20, 15);
+        // 2. SUELO DE LUJO (Mármol Negro Pulido)
+        int width = 32;
+        int depth = 22;
+        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        floor.name = "SueloUltraModerno";
+        floor.transform.SetParent(restauranteContainer.transform);
+        floor.transform.localScale = new Vector3(width/10f, 1, depth/10f);
+        floor.GetComponent<Renderer>().material.color = new Color(0.05f, 0.05f, 0.07f);
 
         // 3. PAREDES DE DISEÑO
-        float wallH = 4.5f;
-        CrearMuroRealista(new Vector3(0, wallH/2, 7.5f), new Vector3(20, wallH, 0.5f), new Color(0.95f, 0.95f, 0.92f)); // Fondo
-        CrearMuroRealista(new Vector3(-10f, wallH/2, 0), new Vector3(0.5f, wallH, 15), new Color(0.3f, 0.32f, 0.35f)); // Lateral gris
+        float wallH = 7f;
+        // Fondo: Muro de microcemento con grandes ventanales
+        CrearMuroRealista(new Vector3(0, wallH/2, 11), new Vector3(width, wallH, 0.5f), new Color(0.2f, 0.2f, 0.22f)); 
+        GenerarVentanalPanoramico(new Vector3(-9, wallH/2, 10.7f));
+        GenerarVentanalPanoramico(new Vector3(9, wallH/2, 10.7f));
 
-        // 4. MOBILIARIO DE ALTO DETALLE
+        // Lateral Izquierdo: Listones de madera verticales
+        GenerarMuroListones(new Vector3(-16, wallH/2, 0), depth, wallH);
 
-        // --- LÍNEA DE COCINA (FONDO) ---
-        // Muebles bajos con encimera de mármol
-        GenerarMueblesBajosLujo(new Vector3(-5, 0, 6.5f), 10);
-        
-        // Electrodomésticos Reales
-        GenerarNeveraDobleInox(new Vector3(8, 0, 6.2f));        // Frigorífico
-        GenerarFregaderoRealista(new Vector3(-3, 1.2f, 6.5f));  // Grifo y pila
-        GenerarPlacaInduccionRealista(new Vector3(2, 1.25f, 6.5f)); // Fuegos
-        GenerarLavavajillasPanelado(new Vector3(-6, 0, 6.5f));   // Lavavajillas
+        // Lateral Derecho: Panelado oscuro mate
+        CrearMuroRealista(new Vector3(16, wallH/2, 0), new Vector3(0.5f, wallH, depth), new Color(0.1f, 0.1f, 0.12f));
 
-        // --- ISLA CENTRAL DE DISEÑO ---
-        GenerarIslaLujo(new Vector3(0, 0, 0), 6, 3);
+        // 4. MOBILIARIO "ELITE"
+
+        // --- LÍNEA TÉCNICA (FONDO) ---
+        GenerarEncimeraBicolor(new Vector3(-10, 0, 8), 8);
+        GenerarPlacaInduccion(new Vector3(-10, 0.6f, 8));
         
-        // --- UTENSILIOS REALISTAS (MENAJE) ---
-        GenerarCazuelaDetail(new Vector3(2, 1.35f, 6.5f), "Olla Grande"); // En el fuego
-        GenerarSartenDetail(new Vector3(0, 1.35f, 0), "Sarten Chef");    // En la isla
+        GenerarEncimeraBicolor(new Vector3(10, 0, 8), 8);
+        GenerarFregaderoBicolor(new Vector3(10, 0, 8));
+
+        GenerarTorreHornos(new Vector3(-14, 0, 8));
+        GenerarNeveraAmericana(new Vector3(14, 0, 8));
+
+        // --- ISLA CENTRAL "WATERFALL" ---
+        GenerarIslaWaterfall(new Vector3(0, 0, 1), 9, 4.5f);
         
-        // Decoración extra
-        GenerarTablaCorteDetalle(new Vector3(-2, 1.3f, 0));
-        GenerarCuchilloRealista(new Vector3(-2, 1.35f, 0.2f));
+        // Iluminación lineal
+        GameObject lamp = CreateBlock("LinearLamp", new Vector3(0, 5, 1), new Vector3(7, 0.1f, 0.1f), Color.white);
+        CreatePointLight(new Vector3(0, 4.8f, 1), Color.white, 10, 1.2f);
+
+        // --- BARRA DE SERVICIO MINIMALISTA ---
+        GameObject barra = CreateBlock("BarraGlass", new Vector3(0, 0.6f, -7), new Vector3(14, 1.2f, 0.8f), new Color(0.05f, 0.05f, 0.05f));
+        CreateBlock("TopGlass", new Vector3(0, 1.25f, -7), new Vector3(14.5f, 0.05f, 1.2f), new Color(0.1f, 0.1f, 0.1f, 0.8f));
+        
+        for(int i=-2; i<=2; i++) {
+           GenerarSillaDiseno(new Vector3(i*2.5f, 0.8f, -8.5f), 180, new Color(0.7f, 0.6f, 0.2f));
+        }
 
         // 5. JUGADOR
-        SpawnPlayerTopDown(new Vector3(0, 0.1f, -4));
+        SpawnPlayerTopDown(new Vector3(0, 0.1f, -2.5f));
         
-        // 6. DETALLE: CLIENTE QUIETO (Lo que pidió el usuario)
-        SpawnCustomerNPC(new Vector3(0, 0.1f, 2.8f)); // Detrás de la barra (Isla en 0, player en -4)
+        // 6. CLIENTE Interactivo
+        SpawnCustomerNPC(new Vector3(0, 0.1f, -9.5f));
+
+        // Decoración
+        GenerarPlantaGrande(new Vector3(-14, 0, -9.5f));
+        GenerarPlantaGrande(new Vector3(14, 0, -9.5f));
     }
+
+    void GenerarIslaWaterfall(Vector3 pos, float w, float d)
+    {
+        CreateBlock("IslandBase", pos + Vector3.up * 0.5f, new Vector3(w - 0.4f, 1.0f, d - 0.2f), new Color(0.15f, 0.12f, 0.1f));
+        Color marble = new Color(0.98f, 0.98f, 1f);
+        CreateBlock("WaterTop", pos + Vector3.up * 1.15f, new Vector3(w + 0.1f, 0.1f, d + 0.1f), marble);
+        CreateBlock("WaterLeft", pos + new Vector3(-w/2, 0.6f, 0), new Vector3(0.1f, 1.2f, d + 0.1f), marble);
+        CreateBlock("WaterRight", pos + new Vector3(w/2, 0.6f, 0), new Vector3(0.1f, 1.2f, d + 0.1f), marble);
+    }
+
+    void GenerarMuroListones(Vector3 pos, float depth, float height)
+    {
+        CreateBlock("WallBase", pos, new Vector3(0.2f, height, depth), new Color(0.1f, 0.1f, 0.1f));
+        float spacing = 0.4f;
+        for(float z = -depth/2 + 0.2f; z < depth/2; z += spacing) {
+            CreateBlock("Liston", pos + new Vector3(0.15f, 0, z), new Vector3(0.1f, height, 0.15f), new Color(0.45f, 0.3f, 0.15f));
+        }
+    }
+
 
     // --- UI INTERACTION PROMPT ---
     private GameObject interactionButton;
@@ -974,9 +1016,8 @@ public class KitchenBootstrap : MonoBehaviour
     {
         // Marco minimalista Negro
         CreateBlock("MarcoSup", pos + Vector3.up * 1.5f, new Vector3(10f, 0.2f, 0.2f), Color.black);
-        CreateBlock("MarcoInf", pos - Vector3.up * 1.5f, new Vector3(10f, 0.2f, 0.2f), Color.black);
-        // Cristal único grande
-        GameObject glass = CreateBlock("Cristal", pos, new Vector3(9.8f, 2.8f, 0.1f), new Color(0.8f, 0.9f, 1f, 0.3f));
+        // Cristal único grande con transparencia real
+        CreateGlassWindow("Cristal", pos, new Vector3(9.8f, 2.8f, 0.05f), restauranteContainer.transform);
     }
 
     void GenerarEncimeraBicolor(Vector3 pos, float width)
