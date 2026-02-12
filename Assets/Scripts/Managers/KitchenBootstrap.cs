@@ -224,7 +224,7 @@ public class KitchenBootstrap : MonoBehaviour
             clientName = "Joven con Indigestión",
             conditionDescription = "Me siento súper hinchado después de la comida de ayer. Quiero cenar algo ligero, quizás una ensalada, pero me da miedo que me siente mal. ¿Cuál elijo?",
             optionA_Text = "Ensalada Templada de Garbanzos con Verduras (Pepino, Aguacate)",
-            optionA_Image = "Food/ChickpeaSalad",
+            optionA_Image = "Images/ensalada-garbanzos",
             optionA_Score = 100,
             optionB_Text = "Pechuga Grillé con Tempura Crujiente",
             optionB_Image = "Images/pechuga_pollo",
@@ -238,7 +238,7 @@ public class KitchenBootstrap : MonoBehaviour
             clientName = "Anciano Delicado",
             conditionDescription = "Tengo el estómago un poco delicado hoy, hijo. ¿Podrías prepararme una crema que sea fácil de digerir y me asiente el cuerpo?",
             optionA_Text = "Crema de Calabacín, Zanahoria y Jengibre",
-            optionA_Image = "Food/ZucchiniGinger",
+            optionA_Image = "Images/crema-calabaza",
             optionA_Score = 100,
             optionB_Text = "Pollo a la Plancha y Fritos",
             optionB_Image = "Images/pechuga_pollo",
@@ -287,13 +287,13 @@ public class KitchenBootstrap : MonoBehaviour
             clientName = "Programadora Senior",
             conditionDescription = "Llevo 12 horas programando y veo luces parpadeantes. Me va a dar una migraña fuerte. ¿Qué debería comer para prevenirlo?",
             optionA_Text = "Huevos Rellenos con Guisantes y Huevo",
-            optionA_Image = "Food/StuffedEggs",
+            optionA_Image = "Images/huevos-rellellons",
             optionA_Score = 100,
             optionB_Text = "Pato a la Naranja con Arroz Integral",
-            optionB_Image = "Food/DuckOrange",
+            optionB_Image = "Images/pato-naranja",
             optionB_Score = 50,
             optionC_Text = "Salchichas con Queso y Ketchup en Pan Blanco",
-            optionC_Image = "Food/HotDog",
+            optionC_Image = "Images/salchichas",
             optionC_Score = 0
         });
 
@@ -301,13 +301,13 @@ public class KitchenBootstrap : MonoBehaviour
             clientName = "Profesora con Cefalea",
             conditionDescription = "Me palpita la sien derecha y me molesta mucho la luz de la sala. Necesito nutrientes para el cerebro. ¿Qué me sugieres?",
             optionA_Text = "Salmón al Horno con Verduras de Primavera y Quinoa",
-            optionA_Image = "Food/SalmonQuinoa",
+            optionA_Image = "Images/salmon-con-quinoa",
             optionA_Score = 100,
             optionB_Text = "Magret de Pato con Salsa de Naranja",
-            optionB_Image = "Food/DuckOrange",
+            optionB_Image = "Images/pato-naranja",
             optionB_Score = 50,
             optionC_Text = "Hot Dog con Doble de Ketchup y Queso",
-            optionC_Image = "Food/HotDog",
+            optionC_Image = "Images/salchichas",
             optionC_Score = 0
         });
 
@@ -315,13 +315,13 @@ public class KitchenBootstrap : MonoBehaviour
             clientName = "Conductor de Autobús",
             conditionDescription = "Tengo la cabeza embotada después del turno. Quiero algo sencillo, tipo una tosta, pero que me ayude con el dolor de cabeza.",
             optionA_Text = "Tostada Integral con Crema de Calabacín y Queso",
-            optionA_Image = "Food/ToastZucchini",
+            optionA_Image = "Images/tostada-crema-calabaza",
             optionA_Score = 100,
             optionB_Text = "Pato Asado con Cítricos y Arroz",
-            optionB_Image = "Food/DuckOrange",
+            optionB_Image = "Images/pato-naranja",
             optionB_Score = 50,
             optionC_Text = "Salchichas Frankfurt con Mucho Ketchup",
-            optionC_Image = "Food/HotDog",
+            optionC_Image = "Images/salchichas",
             optionC_Score = 0
         });
 
@@ -329,13 +329,13 @@ public class KitchenBootstrap : MonoBehaviour
             clientName = "Artista Visual",
             conditionDescription = "Sufro de neuralgia a menudo. Mi médico dice que coma alimentos ricos en vitaminas y evite los procesados. ¿Qué plato tienes hoy?",
             optionA_Text = "Huevos Rellenos Caseros con Guisantes",
-            optionA_Image = "Food/StuffedEggs",
+            optionA_Image = "Images/huevos-rellellons",
             optionA_Score = 100,
             optionB_Text = "Pato con Naranja Glaseada",
-            optionB_Image = "Food/DuckOrange",
+            optionB_Image = "Images/pato-naranja",
             optionB_Score = 50,
             optionC_Text = "Perrito Caliente Industrial con Queso",
-            optionC_Image = "Food/HotDog",
+            optionC_Image = "Images/salchichas",
             optionC_Score = 0
         });
 
@@ -343,13 +343,13 @@ public class KitchenBootstrap : MonoBehaviour
             clientName = "Estudiante de Oposiciones",
             conditionDescription = "No me puedo concentrar del dolor de cabeza. Necesito Omega-3 y comida real para seguir estudiando. ¿Cuál es el mejor plato?",
             optionA_Text = "Salmón al Horno con Quinoa y Verduras",
-            optionA_Image = "Food/SalmonQuinoa",
+            optionA_Image = "Images/salmon-con-quinoa",
             optionA_Score = 100,
             optionB_Text = "Pato a la Naranja (Arroz Integral)",
-            optionB_Image = "Food/DuckOrange",
+            optionB_Image = "Images/pato-naranja",
             optionB_Score = 50,
             optionC_Text = "Salchichas Baratas con Ketchup",
-            optionC_Image = "Food/HotDog",
+            optionC_Image = "Images/salchichas",
             optionC_Score = 0
         });
 
