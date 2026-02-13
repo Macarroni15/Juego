@@ -161,14 +161,16 @@ public class GameLauncher : MonoBehaviour
         CrearTexto(panelTutorial.transform, "TituloTut", "TUTORIAL", 0, 250, 70, Color.white, fuente);
         
         string textoInstrucciones = 
-            "BIENVENIDO A TU COCINA\n\n" +
-            "1. Observa a los clientes que entran.\n" +
-            "2. Detecta su estado (Migraña, Cansancio, etc).\n" +
-            "3. Cocina el plato que mejor les venga.\n" +
-            "   (Evita ingredientes que les sienten mal)\n\n" +
-            "¡Buena suerte Chef!";
+            "CÓMO JUGAR:\n" +
+            "1. Habla con clientes (E) y detecta su problema.\n" +
+            "2. Cocina el plato adecuado.\n\n" +
+            "PROTOCOLOS:\n" +
+            "- ACIDEZ: Legumbres, Garbanzos. (Evita fritos).\n" +
+            "- MIGRAÑA: Salmón, Magnesio. (Evita tiramina/quesos).\n" +
+            "- DEPORTE: Pavo, Batata, Pasta (Energía).\n\n" +
+            "OBJETIVO: ¡Consigue 100 puntos por plato!";
             
-        CrearTexto(panelTutorial.transform, "TextoInstrucciones", textoInstrucciones, 0, 0, 30, Color.white, fuente);
+        CrearTexto(panelTutorial.transform, "TextoInstrucciones", textoInstrucciones, 0, 0, 24, Color.white, fuente);
 
         CrearBoton(panelTutorial.transform, "BtnVolver", "VOLVER AL MENÚ", 0, -250, Color.white, fuente, OnClick_VolverDeTutorial);
     }

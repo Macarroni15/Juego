@@ -192,167 +192,58 @@ public class KitchenBootstrap : MonoBehaviour
         // Solución: Cremas suaves, verduras no ácidas.
         // ======================================================================================
 
-        scenarios.Add(new Scenario {
-            clientName = "Ejecutivo con Estrés",
-            conditionDescription = "Llevo una semana fatal con el estómago. Siento un ardor constante que sube por el pecho. ¿Qué me recomiendas comer que sea suave?",
-            optionA_Text = "Crema de Lentejas Rojas con Espinacas y Verduras",
-            optionA_Image = "Images/crema-de-lentejas-rojas",
-            optionA_Score = 100,
-            optionB_Text = "Pechuga a la Plancha con Langostinos en Tempura",
-            optionB_Image = "Images/pechuga_pollo",
-            optionB_Score = 50,
-            optionC_Text = "Patatas Fritas con Salsa Picante",
-            optionC_Image = "Images/cesta-patatas-fritas-salsa-picante_359687-951",
-            optionC_Score = 0
-        });
+       
 
         scenarios.Add(new Scenario {
-            clientName = "Cantante de Ópera",
-            conditionDescription = "Esta noche tengo función y noto el estómago revuelto, como con fuego. Necesito algo que no me repita ni me de acidez. ¿Qué opción es la mejor?",
-            optionA_Text = "Crema Verde de Puerros con Guisantes, Espinacas y Patata",
-            optionA_Image = "Images/pure-de-espinacas-receta",
-            optionA_Score = 100,
-            optionB_Text = "Brocheta de Pollo y Tempura de Gambas",
-            optionB_Image = "Images/pechuga_pollo",
-            optionB_Score = 50,
-            optionC_Text = "Cesta de Patatas Bravas muy Picantes",
-            optionC_Image = "Images/cesta-patatas-fritas-salsa-picante_359687-951",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Joven con Indigestión",
-            conditionDescription = "Me siento súper hinchado después de la comida de ayer. Quiero cenar algo ligero, quizás una ensalada, pero me da miedo que me siente mal. ¿Cuál elijo?",
+            clientName = "Mujer adolescente y en edad fertil",
+            clientImage = "Images/chicha-Photoroom",
+            conditionDescription = "Una mujer adolescente y en edad fertil que sufre de acidez suele sentir un quemazón en el pecho o la garganta después de comer. A veces suele notar un sabor amargo en la boca. Esto puede hacerla sentir incómoda y querer sentarse o mantenerse quieta. ",
             optionA_Text = "Ensalada Templada de Garbanzos con Verduras (Pepino, Aguacate)",
             optionA_Image = "Images/ensalada-garbanzos",
             optionA_Score = 100,
+            optionA_Feedback = "¡Excelentes opciones! Estas recetas son buenas opciones porque aportan nutrientes ricos en calcio, fibra soluble y antioxidantes. Estos son beneficiosos para la calidad de los huesos, mejora la digestion y ademas reducen la irritación del estómago.",
+            
             optionB_Text = "Pechuga Grillé con Tempura Crujiente",
             optionB_Image = "Images/pechuga_pollo",
             optionB_Score = 50,
+            optionB_Feedback = "Regular. Recuerda seguir incluyendo calcio, la fibra soluble y los antioxidantes en tus dietas. Estos son muy buenos para la acidez.",
+
             optionC_Text = "Patatas Fritas con Mucha Salsa",
             optionC_Image = "Images/cesta-patatas-fritas-salsa-picante_359687-951",
-            optionC_Score = 0
+            optionC_Score = 0,
+            optionC_Feedback = "Mala elección. Recuerda seguir incluyendo calcio, la fibra soluble y los antioxidantes en tus dietas. Estos son muy buenos para la acidez."
         });
 
-        scenarios.Add(new Scenario {
-            clientName = "Anciano Delicado",
-            conditionDescription = "Tengo el estómago un poco delicado hoy, hijo. ¿Podrías prepararme una crema que sea fácil de digerir y me asiente el cuerpo?",
-            optionA_Text = "Crema de Calabacín, Zanahoria y Jengibre",
-            optionA_Image = "Images/crema-calabaza",
-            optionA_Score = 100,
-            optionB_Text = "Pollo a la Plancha y Fritos",
-            optionB_Image = "Images/pechuga_pollo",
-            optionB_Score = 50,
-            optionC_Text = "Chips de Patata al Fuego (Picante)",
-            optionC_Image = "Images/cesta-patatas-fritas-salsa-picante_359687-951",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Mujer Embarazada",
-            conditionDescription = "Tengo muchísima acidez estos últimos meses. Cualquier cosa fuerte me mata. ¿Tienes algún plato de cuchara que sea muy suave?",
-            optionA_Text = "Crema de Lentejas Rojas con Espinacas",
-            optionA_Image = "Images/crema-de-lentejas-rojas",
-            optionA_Score = 100,
-            optionB_Text = "Pechuga y Langostinos Rebozados",
-            optionB_Image = "Images/pechuga_pollo",
-            optionB_Score = 50,
-            optionC_Text = "Patatas Fritas con Tabasco",
-            optionC_Image = "Images/cesta-patatas-fritas-salsa-picante_359687-951",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Crítico Gastronómico",
-            conditionDescription = "Hoy quiero descansar el paladar y el estómago. Busco algo alcalino, verde y reconfortante para la gastritis. Sorpréndeme.",
-            optionA_Text = "Crema Verde de Puerros y Guisantes",
-            optionA_Image = "Images/pure-de-espinacas-receta",
-            optionA_Score = 100,
-            optionB_Text = "Pechuga con Tempura de Aros de Cebolla",
-            optionB_Image = "Images/pechuga_pollo",
-            optionB_Score = 50,
-            optionC_Text = "Patatas con Salsa del Infierno",
-            optionC_Image = "Images/cesta-patatas-fritas-salsa-picante_359687-951",
-            optionC_Score = 0
-        });
+      
 
 
         // ======================================================================================
-        // CATEGORIA 2: MIGRAÑA / NEURALGIA
+        // CATEGORIA 2: MIGRAÑA 
         // Sintomas: Dolor de cabeza, fotofobia.
         // Solución: Vitaminas B, Magnesio, Omega 3. Evitar tiramina/histamina.
         // ======================================================================================
 
         scenarios.Add(new Scenario {
-            clientName = "Programadora Senior",
-            conditionDescription = "Llevo 12 horas programando y veo luces parpadeantes. Me va a dar una migraña fuerte. ¿Qué debería comer para prevenirlo?",
-            optionA_Text = "Huevos Rellenos con Guisantes y Huevo",
-            optionA_Image = "Images/huevos-rellellons",
-            optionA_Score = 100,
-            optionB_Text = "Pato a la Naranja con Arroz Integral",
-            optionB_Image = "Images/pato-naranja",
-            optionB_Score = 50,
-            optionC_Text = "Salchichas con Queso y Ketchup en Pan Blanco",
-            optionC_Image = "Images/salchichas",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Profesora con Cefalea",
-            conditionDescription = "Me palpita la sien derecha y me molesta mucho la luz de la sala. Necesito nutrientes para el cerebro. ¿Qué me sugieres?",
+            clientName = "Profesor",
+            clientImage = "Images/persona",
+            conditionDescription = "Con tus migrañas, ¿qué alimento elegirías ahora para ayudarte a recuperarte?",
             optionA_Text = "Salmón al Horno con Verduras de Primavera y Quinoa",
             optionA_Image = "Images/salmon-con-quinoa",
             optionA_Score = 100,
+            optionA_Feedback = "¡Perfecto! Opta por algo que te resulte suave, con energía moderada y sin ingredientes pesados, para acompañarte cuando no estás al 100%",
+
             optionB_Text = "Magret de Pato con Salsa de Naranja",
             optionB_Image = "Images/pato-naranja",
             optionB_Score = 50,
+            optionB_Feedback = "Regular. Cuando te molesta la cabeza, algo ligero, con hidratos suaves y textura fácil de tolerar, puede resultarte más cómodo",
+
             optionC_Text = "Hot Dog con Doble de Ketchup y Queso",
             optionC_Image = "Images/salchichas",
-            optionC_Score = 0
+            optionC_Score = 0,
+            optionC_Feedback = "Incorrecto. Cuando te molesta la cabeza, algo ligero, con hidratos suaves y textura fácil de tolerar, puede resultarte más cómodo"
         });
 
-        scenarios.Add(new Scenario {
-            clientName = "Conductor de Autobús",
-            conditionDescription = "Tengo la cabeza embotada después del turno. Quiero algo sencillo, tipo una tosta, pero que me ayude con el dolor de cabeza.",
-            optionA_Text = "Tostada Integral con Crema de Calabacín y Queso",
-            optionA_Image = "Images/tostada-crema-calabaza",
-            optionA_Score = 100,
-            optionB_Text = "Pato Asado con Cítricos y Arroz",
-            optionB_Image = "Images/pato-naranja",
-            optionB_Score = 50,
-            optionC_Text = "Salchichas Frankfurt con Mucho Ketchup",
-            optionC_Image = "Images/salchichas",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Artista Visual",
-            conditionDescription = "Sufro de neuralgia a menudo. Mi médico dice que coma alimentos ricos en vitaminas y evite los procesados. ¿Qué plato tienes hoy?",
-            optionA_Text = "Huevos Rellenos Caseros con Guisantes",
-            optionA_Image = "Images/huevos-rellellons",
-            optionA_Score = 100,
-            optionB_Text = "Pato con Naranja Glaseada",
-            optionB_Image = "Images/pato-naranja",
-            optionB_Score = 50,
-            optionC_Text = "Perrito Caliente Industrial con Queso",
-            optionC_Image = "Images/salchichas",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Estudiante de Oposiciones",
-            conditionDescription = "No me puedo concentrar del dolor de cabeza. Necesito Omega-3 y comida real para seguir estudiando. ¿Cuál es el mejor plato?",
-            optionA_Text = "Salmón al Horno con Quinoa y Verduras",
-            optionA_Image = "Images/salmon-con-quinoa",
-            optionA_Score = 100,
-            optionB_Text = "Pato a la Naranja (Arroz Integral)",
-            optionB_Image = "Images/pato-naranja",
-            optionB_Score = 50,
-            optionC_Text = "Salchichas Baratas con Ketchup",
-            optionC_Image = "Images/salchichas",
-            optionC_Score = 0
-        });
-
+        
 
         // ======================================================================================
         // CATEGORIA 3: DESPUÉS DE HACER DEPORTE
@@ -360,89 +251,29 @@ public class KitchenBootstrap : MonoBehaviour
         // Solución: Proteína + Carbohidratos complejos (Bowls).
         // ======================================================================================
 
-        scenarios.Add(new Scenario {
-            clientName = "Ciclista de Montaña",
-            conditionDescription = "Acabo de terminar una ruta de 4 horas por la montaña. Estoy vacía de energía. ¿Qué debería comer para recuperar glucógeno y músculo?",
-            optionA_Text = "Tazón de Pollo, Espárragos y Quinoa",
-            optionA_Image = "Food/BowlChicken",
-            optionA_Score = 100,
-            optionB_Text = "Hígado con Cebolla Caramelizada",
-            optionB_Image = "Food/LiverOnion",
-            optionB_Score = 50,
-            optionC_Text = "Pizza con Piña",
-            optionC_Image = "Food/PizzaPineapple",
-            optionC_Score = 0
-        });
+        
 
         scenarios.Add(new Scenario {
-            clientName = "Nadadora de Competición",
-            conditionDescription = "Salgo de la piscina muerta de hambre. Necesito grasas saludables. ¿Qué me pones?",
-            optionA_Text = "Tazón de Salmón, Calabacín y Nueces",
-            optionA_Image = "Food/BowlSalmon",
-            optionA_Score = 100,
-            optionB_Text = "Plato de Hígado Encebollado",
-            optionB_Image = "Food/LiverOnion",
-            optionB_Score = 50,
-            optionC_Text = "Pizza Hawaiana (Piña y Jamón)",
-            optionC_Image = "Food/PizzaPineapple",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Corredor de Maratón",
-            conditionDescription = "Mañana tengo carrera y necesito hacer carga de hidratos de calidad, nada de grasas malas. ¿Qué plato me recomiendas?",
+            clientName = "Mujer adolescente y en edad fertil",
+            clientImage = "Images/chicha-Photoroom",
+            conditionDescription = "Mujer adolescente y en edad fertil que siente cansancio excesivo después de hacer deporte",
             optionA_Text = "Tazón de Pavo, Calabaza y Batata",
             optionA_Image = "Food/BowlTurkey",
             optionA_Score = 100,
+            optionA_Feedback = "¡Muy bien! Sigue así, verás cómo una cena con proteínas de fácil asimilación, hierro biodisponible y carbohidratos complejos te ayuda a recuperar energía y descansar mejor después del ejercicio",
+
             optionB_Text = "Hígado de Ternera con Cebolla",
             optionB_Image = "Food/LiverOnion",
             optionB_Score = 50,
+            optionB_Feedback = "Regular. Intenta evitar platos demasiado grasos o muy dulces justo después del ejercicio, puedes probar con nuestro plato de pollo, esparragos y quinoa.",
+
             optionC_Text = "Pizza Familiar con Piña",
             optionC_Image = "Food/PizzaPineapple",
-            optionC_Score = 0
+            optionC_Score = 0,
+            optionC_Feedback = "Mal. Intenta evitar platos demasiado grasos o muy dulces justo después del ejercicio, puedes probar con nuestro plato de pollo, esparragos y quinoa"
         });
 
-        scenarios.Add(new Scenario {
-            clientName = "Levantador de Pesas",
-            conditionDescription = "Hoy ha sido día de pierna y he roto muchas fibras. Necesito proteínas y hierro a tope. ¿Cuál es la mejor opción?",
-            optionA_Text = "Tazón de Pollo, Brócoli y Lentejas",
-            optionA_Image = "Food/BowlLentils",
-            optionA_Score = 100,
-            optionB_Text = "Hígado Frito con Cebolla",
-            optionB_Image = "Food/LiverOnion",
-            optionB_Score = 50,
-            optionC_Text = "Pizza con Trozos de Piña",
-            optionC_Image = "Food/PizzaPineapple",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Jugadora de Baloncesto",
-            conditionDescription = "Acabo de jugar una prórroga y estoy exhausta. Necesito recuperar sales y fuerzas, pero algo sano. ¿Cuál es la mejor opción?",
-            optionA_Text = "Tazón de Pollo, Espárragos y Quinoa",
-            optionA_Image = "Food/BowlChicken",
-            optionA_Score = 100,
-            optionB_Text = "Hígado con Salsa de Cebolla",
-            optionB_Image = "Food/LiverOnion",
-            optionB_Score = 50,
-            optionC_Text = "Pizza Hawaiana",
-            optionC_Image = "Food/PizzaPineapple",
-            optionC_Score = 0
-        });
-
-        scenarios.Add(new Scenario {
-            clientName = "Entrenador Personal",
-            conditionDescription = "Siempre digo a mis clientes que la comida post-entreno es sagrada. Hoy me toca a mí pedir consejo. ¿Cuál es la mejor opción?",
-            optionA_Text = "Tazón de Pavo, Calabaza y Batata",
-            optionA_Image = "Food/BowlTurkey",
-            optionA_Score = 100,
-            optionB_Text = "Hígado Encebollado",
-            optionB_Image = "Food/LiverOnion",
-            optionB_Score = 50,
-            optionC_Text = "Pizza con Piña en Almíbar",
-            optionC_Image = "Food/PizzaPineapple",
-            optionC_Score = 0
-        });
+    
     }
 
     // --- SECUENCIA DE INICIO PROFESIONAL ---
@@ -454,7 +285,7 @@ public class KitchenBootstrap : MonoBehaviour
         GameObject panelCarga = CrearPanel(new Color(0.1f, 0.1f, 0.12f));
         
         // 2. Título Flotante
-        GameObject titulo = CrearTexto(panelCarga.transform, "CHEF SIMULATOR", 0, 100, 50, new Color(1f, 0.8f, 0.2f)); // Oro
+        GameObject titulo = CrearTexto(panelCarga.transform, "NUTRI-BALANCE", 0, 100, 50, new Color(1f, 0.8f, 0.2f)); // Oro
         titulo.GetComponent<Text>().fontStyle = FontStyle.Bold;
 
         // 3. Barra de Carga Minimalista
@@ -527,11 +358,11 @@ public class KitchenBootstrap : MonoBehaviour
         rtHeader.anchoredPosition = Vector2.zero; rtHeader.sizeDelta = new Vector2(800, 200);
 
         // Título Central
-        GameObject titleT = CrearTexto(headerContainer.transform, "CHEF PROFESSIONAL", 0, 40, 70, new Color(1f, 0.85f, 0.3f)); // Dorado suave
+        GameObject titleT = CrearTexto(headerContainer.transform, "NUTRI-BALANCE", 0, 40, 70, new Color(1f, 0.85f, 0.3f)); // Dorado suave
         titleT.GetComponent<Text>().fontStyle = FontStyle.Bold;
 
         // Subtítulo
-        CrearTexto(headerContainer.transform, "GESTIÓN GASTRONÓMICA AVANZADA", 0, -30, 20, new Color(0.7f, 0.75f, 0.8f));
+        CrearTexto(headerContainer.transform, "", 0, -30, 20, new Color(0.7f, 0.75f, 0.8f));
 
         // 3. CENTER - Botones
         GameObject buttonContainer = new GameObject("ButtonContainer");
@@ -551,8 +382,8 @@ public class KitchenBootstrap : MonoBehaviour
         // --- OPCIÓN 2: MANUAL DE INSTRUCCIONES ---
         CrearBotonModerno(buttonContainer.transform, "MANUAL DE INSTRUCCIONES", 0, 0, new Color(0.2f, 0.4f, 0.6f), MostrarInstrucciones);
 
-        // --- OPCIÓN 3: CREAR USUARIO ---
-        CrearBotonModerno(buttonContainer.transform, "CREAR USUARIO", 0, -100, new Color(0.5f, 0.3f, 0.6f), MostrarCrearUsuario);
+        // --- OPCIÓN 3: SALIR DEL JUEGO ---
+        CrearBotonModerno(buttonContainer.transform, "SALIR DEL JUEGO", 0, -100, new Color(0.8f, 0.3f, 0.3f), SalirDelJuego);
         
         // Footer
         GameObject footer = CrearTexto(this.currentMenuPanel.transform, "© 2026 Enterprise Solutions", 0, -300, 12, Color.gray);
@@ -594,88 +425,37 @@ public class KitchenBootstrap : MonoBehaviour
         if (this.currentMenuPanel != null) Destroy(this.currentMenuPanel);
         this.currentMenuPanel = CrearPanel(new Color(0.15f, 0.2f, 0.25f)); // Azul acero
 
-        CrearTexto(this.currentMenuPanel.transform, "MANUAL OPERATIVO", 0, 200, 50, Color.white);
+        CrearTexto(this.currentMenuPanel.transform, "MANUAL OPERATIVO", 0, 350, 40, Color.white); // Subido título
 
         string manual = 
-            "- PROTOCOLO DE ACIDEZ: Servir alimentos alcalinos (Pollo, Avena).\n\n" +
-            "- PROTOCOLO DE MIGRAÑA: Evitar tiramina. Priorizar Espinacas/Magnesio.\n\n" +
-            "- PROTOCOLO DEPORTIVO: Requerimiento de Potasio y Carbohidratos (Plátano, Pasta).\n\n" +
-            "OBJETIVO: Maximizar satisfacción del cliente (100 pts) para evitar sanciones.";
+            "<b>CÓMO JUGAR:</b>\n" +
+            "1. Acércate a los clientes sentados y pulsa <b>'E'</b> para hablar.\n" +
+            "2. Identifica su problema (Acidez, Migraña, Cansancio post-deporte).\n" +
+            "3. Selecciona la receta adecuada en el menú para curarles.\n\n" +
+            "<b>GUÍA RÁPIDA DE PROTOCOLOS:</b>\n" +
+            "• <b>ACIDEZ:</b> Alimentos alcalinos y ricos en fibra.\n" +
+            "   <i>(Recomendado: Legumbres, Garbanzos, Verduras suaves)</i>\n" +
+            "   <i>(Evitar: Fritos como Tempura, Salsas fuertes)</i>\n" +
+            "• <b>MIGRAÑA:</b> Omega 3 y Magnesio. Evitar tiramina.\n" +
+            "   <i>(Recomendado: Salmón, Espinacas, Quinoa)</i>\n" +
+            "• <b>DEPORTE:</b> Proteína y Carbohidratos para recuperar.\n" +
+            "   <i>(Recomendado: Pavo, Batata, Pasta)</i>\n\n" +
+            "<b>OBJETIVO:</b> ¡Consigue 100 puntos en cada plato para ganar!";
 
-        GameObject txt = CrearTexto(this.currentMenuPanel.transform, manual, 0, 0, 24, new Color(0.9f, 0.9f, 0.9f));
-        txt.GetComponent<RectTransform>().sizeDelta = new Vector2(900, 400); // Dar espacio para leer
+        GameObject txt = CrearTexto(this.currentMenuPanel.transform, manual, 0, 0, 22, new Color(0.9f, 0.9f, 0.9f));
+        txt.GetComponent<Text>().alignment = TextAnchor.UpperLeft; // Alineación izquierda para lectura fácil
+        txt.GetComponent<RectTransform>().sizeDelta = new Vector2(1000, 600); 
 
-        CrearBotonModerno(this.currentMenuPanel.transform, "VOLVER AL MENÚ", 0, -200, new Color(0.6f, 0.2f, 0.2f), MostrarMenuPrincipal);
+        CrearBotonModerno(this.currentMenuPanel.transform, "VOLVER AL MENÚ", 0, -350, new Color(0.6f, 0.2f, 0.2f), MostrarMenuPrincipal);
     }
 
-    void MostrarCrearUsuario()
+    void SalirDelJuego()
     {
-        if (this.currentMenuPanel != null) Destroy(this.currentMenuPanel);
-        this.currentMenuPanel = CrearPanel(new Color(0.2f, 0.15f, 0.25f)); // Púrpura oscuro corporativo
-
-        // Header
-        GameObject header = CrearTexto(this.currentMenuPanel.transform, "REGISTRO DE PERSONAL", 0, 150, 50, Color.white);
-        header.GetComponent<Text>().fontStyle = FontStyle.Bold;
-        
-        CrearTexto(this.currentMenuPanel.transform, "Identificación del Chef Ejecutivo", 0, 100, 20, new Color(0.8f, 0.8f, 0.8f));
-
-        // -- INPUT FIELD CONTAINER --
-        GameObject inputObj = new GameObject("InputField_Name");
-        inputObj.transform.SetParent(this.currentMenuPanel.transform, false);
-        
-        // Background Image for Input
-        Image img = inputObj.AddComponent<Image>();
-        img.color = new Color(1f, 1f, 1f, 0.1f); // Blanco semitransparente moderno
-        
-        // RECT TRANSFORM (Ya existe por el Image, lo recuperamos)
-        RectTransform rtInput = inputObj.GetComponent<RectTransform>();
-        rtInput.sizeDelta = new Vector2(500, 60);
-        rtInput.anchoredPosition = new Vector2(0, 20);
-
-        // InputField Component (Funcional)
-        InputField inputField = inputObj.AddComponent<InputField>();
-        
-        // 1. Child Text Component (Lo que escribe el usuario)
-        GameObject textObj = new GameObject("Text");
-        textObj.transform.SetParent(inputObj.transform, false);
-        Text textComp = textObj.AddComponent<Text>();
-        textComp.font = GetMyFont();
-        textComp.fontSize = 28;
-        textComp.color = Color.white;
-        textComp.alignment = TextAnchor.MiddleCenter;
-        RectTransform rtText = textObj.GetComponent<RectTransform>();
-        rtText.anchorMin = Vector2.zero; rtText.anchorMax = Vector2.one;
-        rtText.sizeDelta = new Vector2(-20, 0); // Padding lateral
-        rtText.offsetMin = new Vector2(10, 0); rtText.offsetMax = new Vector2(-10, 0);
-        
-        // 2. Child Placeholder Component (Texto fantasma)
-        GameObject placeHolderObj = new GameObject("Placeholder");
-        placeHolderObj.transform.SetParent(inputObj.transform, false);
-        Text placeComp = placeHolderObj.AddComponent<Text>();
-        placeComp.text = "Escriba su nombre...";
-        placeComp.font = GetMyFont();
-        placeComp.fontSize = 28;
-        placeComp.fontStyle = FontStyle.Italic;
-        placeComp.color = new Color(1f, 1f, 1f, 0.5f);
-        placeComp.alignment = TextAnchor.MiddleCenter;
-        RectTransform rtPlace = placeHolderObj.GetComponent<RectTransform>();
-        rtPlace.anchorMin = Vector2.zero; rtPlace.anchorMax = Vector2.one;
-        rtPlace.sizeDelta = new Vector2(-20, 0);
-        rtPlace.offsetMin = new Vector2(10, 0); rtPlace.offsetMax = new Vector2(-10, 0);
-
-        // Conectar todo al InputField
-        inputField.textComponent = textComp;
-        inputField.placeholder = placeComp;
-        inputField.image = img;
-        
-        // Buttons
-        CrearBotonModerno(currentMenuPanel.transform, "CONFIRMAR REGISTRO", 0, -80, new Color(0.2f, 0.6f, 0.3f), () => {
-             Debug.Log($"Usuario registrado: {inputField.text}");
-             // Aquí podrías guardar el nombre en una variable estática si quisieras
-             MostrarMenuPrincipal(); 
-        });
-
-        CrearBotonModerno(currentMenuPanel.transform, "ATRAS", 0, -160, new Color(0.6f, 0.2f, 0.2f), MostrarMenuPrincipal);
+        Debug.Log("Saliendo del juego...");
+        Application.Quit();
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
     }
     
     private void Update()
@@ -2222,7 +2002,10 @@ public class KitchenBootstrap : MonoBehaviour
         GameObject clientObj = new GameObject("ClientImg");
         clientObj.transform.SetParent(gamePanel.transform, false);
         Image clientImg = clientObj.AddComponent<Image>();
-        Sprite spriteClient = GetOrGenerateSprite("Images/persona", Color.gray);
+        
+        // Usar la imagen específica del escenario o fallback a "persona"
+        string imgPath = !string.IsNullOrEmpty(current.clientImage) ? current.clientImage : "Images/persona";
+        Sprite spriteClient = GetOrGenerateSprite(imgPath, Color.gray);
         
         if(spriteClient != null) {
             clientImg.sprite = spriteClient;
@@ -2276,9 +2059,9 @@ public class KitchenBootstrap : MonoBehaviour
 
         // --- SISTEMA DE ALEATORIEDAD ---
         List<OptionDataHelper> choices = new List<OptionDataHelper>() {
-            new OptionDataHelper { text = current.optionA_Text, image = current.optionA_Image, score = current.optionA_Score },
-            new OptionDataHelper { text = current.optionB_Text, image = current.optionB_Image, score = current.optionB_Score },
-            new OptionDataHelper { text = current.optionC_Text, image = current.optionC_Image, score = current.optionC_Score }
+            new OptionDataHelper { text = current.optionA_Text, image = current.optionA_Image, score = current.optionA_Score, feedback = current.optionA_Feedback },
+            new OptionDataHelper { text = current.optionB_Text, image = current.optionB_Image, score = current.optionB_Score, feedback = current.optionB_Feedback },
+            new OptionDataHelper { text = current.optionC_Text, image = current.optionC_Image, score = current.optionC_Score, feedback = current.optionC_Feedback }
         };
 
         // Barajamos
@@ -2293,7 +2076,7 @@ public class KitchenBootstrap : MonoBehaviour
         string[] labels = { "A", "B", "C" };
         for (int i = 0; i < choices.Count; i++) {
             OptionDataHelper choice = choices[i];
-            CrearCartaOpcion(optionsArea.transform, i, labels[i], choice.text, choice.image, () => CheckAnswer(choice.score));
+            CrearCartaOpcion(optionsArea.transform, i, labels[i], choice.text, choice.image, () => CheckAnswer(choice.score, choice.feedback));
         }
 
         // --- BOTÓN SALIR (X) ---
@@ -2434,7 +2217,7 @@ public class KitchenBootstrap : MonoBehaviour
         return t;
     }
 
-    void CheckAnswer(int score)
+    void CheckAnswer(int score, string feedback)
     {
         bool gameOver = false;
         string reason = "";
@@ -2443,7 +2226,7 @@ public class KitchenBootstrap : MonoBehaviour
         {
              // 0% -> Pierdes inmediatamente
             gameOver = true;
-            reason = "¡Cuidado! Esa elección fue terrible (0%).";
+            reason = "Has servido una comida perjudicial para el cliente.\n\n" + feedback;
         }
         else if (score == 50)
         {
@@ -2470,13 +2253,12 @@ public class KitchenBootstrap : MonoBehaviour
             // Sumar puntos y avanzar
             totalScore += score;
             roundsSurvived++;
-            // Feedback breve antes de la siguiente ronda? O directa?
-            // El usuario dijo "si aciertas pasas de ronda". Vamos a mostrar feedback rapido.
-            ShowFeedback(score);
+            // Feedback con mensaje personalizado
+            ShowFeedback(score, feedback);
         }
     }
 
-    void ShowFeedback(int score)
+    void ShowFeedback(int score, string feedback)
     {
         // Liberar al cliente si la respuesta fue aceptable (para que deje hueco al irse)
         if (score >= 50 && currentCustomerServed != null)
@@ -2489,14 +2271,20 @@ public class KitchenBootstrap : MonoBehaviour
         // Fondo resultado
         gamePanel = CrearPanel(score == 100 ? new Color(0.2f, 0.6f, 0.2f) : (score == 50 ? new Color(0.8f, 0.8f, 0.2f) : new Color(0.8f, 0.2f, 0.2f)));
 
-        string msg = "";
-        if (score == 100) msg = "¡HAS ESCOGIDO BIEN! (+100)";
-        else if (score == 50) msg = "REGULAR (+50)";
-        else msg = "ELECCIÓN INCORRECTA (+0)";
+        string title = "";
+        if (score == 100) title = "¡EXCELENTE! (+100)";
+        else if (score == 50) title = "PODRÍA SER MEJOR... (+50)";
+        else title = "ELECCIÓN INCORRECTA (+0)";
 
-        CrearTexto(gamePanel.transform, msg, 0, 50, 60, Color.white);
+        // Título Grande
+        CrearTexto(gamePanel.transform, title, 0, 100, 50, Color.white);
         
-        CrearBoton(gamePanel.transform, "SIGUIENTE RETO >>", 0, -100, Color.white, () => {
+        // Mensaje/Feedback Personalizado
+        GameObject txtObj = CrearTexto(gamePanel.transform, feedback, 0, 0, 28, Color.white);
+        txtObj.GetComponent<Text>().fontStyle = FontStyle.Italic;
+        txtObj.GetComponent<RectTransform>().sizeDelta = new Vector2(800, 200); // Más ancho para leer bien
+
+        CrearBoton(gamePanel.transform, "SIGUIENTE RETO >>", 0, -150, Color.white, () => {
              // Al dar a siguiente, quitamos el feedback y mostramos otra pregunta directamente
              if(gamePanel != null) Destroy(gamePanel);
              ShowRound();
@@ -2703,15 +2491,25 @@ public class KitchenBootstrap : MonoBehaviour
 public class Scenario
 {
     public string clientName;
+    public string clientImage; // NEW: Custom image for each client
     public string conditionDescription;
+    
+    [Header("Opción A (Correcta - 100)")]
     public string optionA_Text;
     public string optionA_Image;
+    public string optionA_Feedback; // NEW
     public int optionA_Score;
+
+    [Header("Opción B (Regular - 50)")]
     public string optionB_Text;
     public string optionB_Image;
+    public string optionB_Feedback; // NEW
     public int optionB_Score;
+
+    [Header("Opción C (Mala - 0)")]
     public string optionC_Text;
     public string optionC_Image;
+    public string optionC_Feedback; // NEW
     public int optionC_Score;
 }
 
@@ -2720,4 +2518,5 @@ public struct OptionDataHelper
     public string text;
     public string image;
     public int score;
+    public string feedback; // NEW
 }
