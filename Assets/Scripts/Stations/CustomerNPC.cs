@@ -16,15 +16,14 @@ public class CustomerNPC : MonoBehaviour, IInteractable
         TalkToCustomer();
     }
 
-    // Opción 2: Mostrar Botón/Prompt cuando está cerca
+    // Opción 2: Mostrar Botón/Prompt cuando está cerca Y permitir interacción con 'E' mejorada
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") || other.GetComponent<PlayerController>() != null)
         {
             if (KitchenBootstrap.Instance != null)
             {
-                // Muestra el botón arriba a la izquierda
-                KitchenBootstrap.Instance.ToggleInteractionPrompt(true, () => TalkToCustomer());
+                KitchenBootstrap.Instance.SetNearbyCustomer(this);
             }
         }
     }
@@ -35,8 +34,7 @@ public class CustomerNPC : MonoBehaviour, IInteractable
         {
             if (KitchenBootstrap.Instance != null)
             {
-                // Oculta el botón
-                KitchenBootstrap.Instance.ToggleInteractionPrompt(false);
+                KitchenBootstrap.Instance.SetNearbyCustomer(null);
             }
         }
     }

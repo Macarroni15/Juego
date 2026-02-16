@@ -142,13 +142,28 @@ public class KitchenBootstrap : MonoBehaviour
     private int totalScore;
     private int consecutiveMediums;
     private List<Scenario> scenarios;
+    private List<Scenario> availableScenarios;
 
     // --- NUEVO SISTEMA DE CLIENTES AUTO ---
     public CustomerNPC currentCustomerServed;
     private List<GameObject> activeCustomers = new List<GameObject>();
     private float nextSpawnTime;
     private const float SPAWN_INTERVAL = 8f; // Segundos entre clientes
+    private CustomerNPC nearbyInteractableCustomer; // Ref to current customer for 'E' interaction
     private bool isGameActive = false;
+
+    public void SetNearbyCustomer(CustomerNPC npc)
+    {
+        nearbyInteractableCustomer = npc;
+        if (npc != null)
+        {
+            ToggleInteractionPrompt(true, () => npc.Interact(null));
+        }
+        else
+        {
+            ToggleInteractionPrompt(false);
+        }
+    }
 
     private void Start()
     {
@@ -258,17 +273,17 @@ public class KitchenBootstrap : MonoBehaviour
             clientImage = "Images/chicha-Photoroom",
             conditionDescription = "Mujer adolescente y en edad fertil que siente cansancio excesivo después de hacer deporte",
             optionA_Text = "Tazón de Pavo, Calabaza y Batata",
-            optionA_Image = "Food/BowlTurkey",
+            optionA_Image = "Images/tazon",
             optionA_Score = 100,
             optionA_Feedback = "¡Muy bien! Sigue así, verás cómo una cena con proteínas de fácil asimilación, hierro biodisponible y carbohidratos complejos te ayuda a recuperar energía y descansar mejor después del ejercicio",
 
             optionB_Text = "Hígado de Ternera con Cebolla",
-            optionB_Image = "Food/LiverOnion",
+            optionB_Image = "Images/higado",
             optionB_Score = 50,
             optionB_Feedback = "Regular. Intenta evitar platos demasiado grasos o muy dulces justo después del ejercicio, puedes probar con nuestro plato de pollo, esparragos y quinoa.",
 
             optionC_Text = "Pizza Familiar con Piña",
-            optionC_Image = "Food/PizzaPineapple",
+            optionC_Image = "Images/pizza_hawaiana",
             optionC_Score = 0,
             optionC_Feedback = "Mal. Intenta evitar platos demasiado grasos o muy dulces justo después del ejercicio, puedes probar con nuestro plato de pollo, esparragos y quinoa"
         });
@@ -415,6 +430,12 @@ public class KitchenBootstrap : MonoBehaviour
             SpawnPlayerTopDown(new Vector3(0, 0.1f, -6.0f));
         }
         
+        // Resetear juego
+        roundsSurvived = 0;
+        totalScore = 0;
+        consecutiveMediums = 0;
+        availableScenarios = new List<Scenario>(scenarios);
+
         isGameActive = true;
         nextSpawnTime = Time.time + 2f;
         Debug.Log(">>> EMPEZANDO JUEGO (Estado configurado)");
@@ -460,6 +481,12 @@ public class KitchenBootstrap : MonoBehaviour
     
     private void Update()
     {
+        // Interacción con 'E' mejorada (Directa y Fiable) - CORREGIDO para Input System
+        if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame && nearbyInteractableCustomer != null && gamePanel == null && isGameActive)
+        {
+            nearbyInteractableCustomer.Interact(null);
+        }
+
         // Lógica de aparición de clientes automática
         if (isGameActive && activeCustomers.Count < 5)
         {
@@ -2159,8 +2186,17 @@ public class KitchenBootstrap : MonoBehaviour
         Color colorFondo = (fondoGame != null) ? Color.white : new Color(0.9f, 0.9f, 0.95f);
         gamePanel = CrearPanel(colorFondo, fondoGame);
 
-        // Elegir escenario ALEATORIO
-        Scenario current = scenarios[Random.Range(0, scenarios.Count)];
+        // Verificar final de juego por agotamiento de preguntas
+        if (availableScenarios == null || availableScenarios.Count == 0)
+        {
+            ShowGameOver("Juego Finalizado");
+            return;
+        }
+
+        // Elegir escenario ALEATORIO SIN REPETIR
+        int index = Random.Range(0, availableScenarios.Count);
+        Scenario current = availableScenarios[index];
+        availableScenarios.RemoveAt(index);
 
         // --- 1. HUD PUNTUACIÓN (Top Right Overlay) ---
         GameObject scorePanel = CrearPanelTransparente(gamePanel.transform, new Vector2(0.6f, 0.92f), new Vector2(0.95f, 0.98f)); // Más arriba
@@ -2424,46 +2460,20 @@ public class KitchenBootstrap : MonoBehaviour
 
     void CheckAnswer(int score, string feedback)
     {
-        bool gameOver = false;
-        string reason = "";
+        // YA NO HAY GAME OVER POR FALLAR. Solo al completar las 3 rondas.
+        
+        // Sumar puntos
+        totalScore += score;
+        roundsSurvived++;
 
-        if (score == 0)
-        {
-             // 0% -> Pierdes inmediatamente
-            gameOver = true;
-            reason = "Has servido una comida perjudicial para el cliente.\n\n" + feedback;
-        }
-        else if (score == 50)
-        {
-            // 50% -> Pasas de ronda pero... si haces 3 seguidos pierdes
-            consecutiveMediums++;
-            if (consecutiveMediums >= 3)
-            {
-                gameOver = true;
-                reason = "Has cometido demasiados errores 'regulares' seguidos (3x).";
-            }
-        }
-        else if (score == 100)
-        {
-            // 100% -> Pasas y limpias rachas de errores
-            consecutiveMediums = 0; 
-        }
-
-        if (gameOver)
-        {
-            ShowGameOver(reason);
-        }
-        else
-        {
-            // Sumar puntos y avanzar
-            totalScore += score;
-            roundsSurvived++;
-            // Feedback con mensaje personalizado
-            ShowFeedback(score, feedback);
-        }
+        // Si llegamos a 3 rondas (preguntas), mostramos feedback pero marcamos final
+        bool isFinal = (roundsSurvived >= 3);
+            
+        // Feedback con mensaje personalizado
+        ShowFeedback(score, feedback, isFinal);
     }
 
-    void ShowFeedback(int score, string feedback)
+    void ShowFeedback(int score, string feedback, bool isFinalRound = false)
     {
         // Liberar al cliente si la respuesta fue aceptable (para que deje hueco al irse)
         if (score >= 50 && currentCustomerServed != null)
@@ -2489,10 +2499,20 @@ public class KitchenBootstrap : MonoBehaviour
         txtObj.GetComponent<Text>().fontStyle = FontStyle.Italic;
         txtObj.GetComponent<RectTransform>().sizeDelta = new Vector2(800, 200); // Más ancho para leer bien
 
-        CrearBoton(gamePanel.transform, "SIGUIENTE RETO >>", 0, -150, Color.white, () => {
-             // Al dar a siguiente, quitamos el feedback y mostramos otra pregunta directamente
+        string btnText = isFinalRound ? "VER RESULTADO FINAL >>" : "SIGUIENTE RETO >>";
+        
+        CrearBoton(gamePanel.transform, btnText, 0, -150, Color.white, () => {
+             // Al dar a siguiente, quitamos el feedback y mostramos otra pregunta o Game Over
              if(gamePanel != null) Destroy(gamePanel);
-             ShowRound();
+             
+             if (isFinalRound)
+             {
+                 ShowGameOver("¡Has completado todas las rondas!");
+             }
+             else
+             {
+                 ShowRound();
+             }
         });
     }
 
